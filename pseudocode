@@ -1,0 +1,25 @@
+if(frame.hands.length > 1){
+	window.alert("Please use only 1 hand at a time");
+}
+
+let thumb = frame.pointables[0];
+let index = frame.pointables[1];
+let middle = frame.pointables[2];
+let ring = frame.pointables[3];
+let pinky = frame.pointables[4];
+
+// allows you to revert to drawing color after erasing
+let lastColor = curColor;
+
+if(!thumb.extended && index.extended && !middle.extended && !ring.extended && !pinky.extended){
+	paint = true;
+}
+else if(!thumb.extended && !index.extended && !middle.extended && !ring.extended && pinky.extended){
+	paint = true;
+	lastColor = curColor;
+	curColor = "#ffffff";
+}
+else{
+	paint = false;
+	curColor = lastColor;
+}
