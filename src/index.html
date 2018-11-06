@@ -1,0 +1,117 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="manifest" href="site.webmanifest">
+
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link href="https://fonts.googleapis.com/css?family=Cabin+Sketch|Jua|Open+Sans" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+  <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
+
+  <script src="js/jscolor.js"></script>
+</head>
+
+<body>
+
+  <h1>Handimations</h1>
+
+  <div id="canvasDiv">
+    <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
+  		<i class="fas fa-palette fa-3x"></i>
+  	</button>
+  </div>
+
+  <script
+  			  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  			  crossorigin="anonymous"></script>
+  <script>
+  var canvasDiv = document.getElementById('canvasDiv');
+  canvas = document.createElement('canvas');
+  canvas.setAttribute('width', '1000');
+  canvas.setAttribute('height', '500');
+  canvas.setAttribute('id', 'canvas');
+  canvasDiv.appendChild(canvas);
+  if(typeof G_vmlCanvasManager != 'undefined') {
+	   canvas = G_vmlCanvasManager.initElement(canvas);
+  }
+  context = canvas.getContext("2d");
+  var curColor ='#123321';
+  var clickColor = new Array();
+  $("#canvas").mousedown(function(e){
+    var mouseX = e.pageX-this.offsetLeft;
+    var mouseY = e.pageY-this.offsetTop;
+
+    paint = true;
+    addClick(e.pageX-this.offsetLeft,e.pageY-this.offsetTop);
+    redraw();
+  });
+
+  $("#canvas").mousemove(function(e){
+    if(paint){
+      addClick(e.pageX-this.offsetLeft,e.pageY-this.offsetTop, true);
+      redraw();
+    }
+  });
+
+  $("#canvas").mouseup(function(e){
+    paint = false;
+  });
+
+  $("#canvas").mouseleave(function(e){
+    point = false;
+  });
+
+  var clickX = new Array();
+  var clickY = new Array();
+  var clickDrag = new Array();
+  var paint;
+
+  function setStrokeColor(picker){
+    curColor = '#' + picker.toString();
+  }
+
+  function addClick(x,y,dragging){
+    clickX.push(x);
+    clickY.push(y);
+    clickDrag.push(dragging);
+    clickColor.push(curColor);
+  }
+
+  function redraw(){
+    context.clearRect(0,0, context.canvas.width, context.canvas.height);
+
+    context.lineJoiun ="round";
+    context.lineWidth = 5;
+
+    for(var i=0; i<clickX.length; i++){
+      context.beginPath();
+      if(clickDrag[i] && i){
+        context.moveTo(clickX[i-1], clickY[i-1]);
+      }else{
+        context.moveTo(clickX[i]-1, clickY[i]);
+      }
+
+      context.lineTo(clickX[i], clickY[i]);
+      context.closePath();
+      context.strokeStyle = clickColor[i];
+      context.stroke();
+    }
+  }
+
+  </script>
+
+  <script src="js/plugins.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+
+</html>
