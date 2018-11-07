@@ -162,12 +162,6 @@ Leap.loop(controllerOptions, function(frame) {
         //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
         //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
         pointableString += "Extended?: "  + pointable.extended + "<br />";
-        pointable.bones.forEach( function(bone){
-          pointableString += boneTypeMap[bone.type] + " bone <br />";
-          pointableString += "Center: " + vectorToString(bone.center()) + "<br />";
-          pointableString += "Direction: " + vectorToString(bone.direction()) + "<br />";
-          pointableString += "Up vector: " + vectorToString(bone.basis[1]) + "<br />";
-        });
         pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
         pointableString += "</div>";
       }
@@ -220,19 +214,21 @@ Leap.loop(controllerOptions, function(frame) {
   else {
     gestureString += "No gestures";
   }
-  gestureOutput.innerHTML = gestureString;
+  //gestureOutput.innerHTML = gestureString;
 
   // Start drawing code
       // Leap Motion
-      if(frame.hands.length != 0){
+      if (frame.hands.length != 0) {
       	console.log("Please use exactly 1 hand at a time");
-      }
+      }else{
 
       let thumb = frame.pointables[0];
       let index = frame.pointables[1];
       let middle = frame.pointables[2];
       let ring = frame.pointables[3];
       let pinky = frame.pointables[4];
+
+      if ( (thumb != undefined)&&(index != undefined)&&(middle != undefined)&&(ring != undefined)&&(pinky != undefined) ){
 
       // allows you to revert to drawing color after erasing
       let lastColor = curColor;
@@ -272,8 +268,10 @@ Leap.loop(controllerOptions, function(frame) {
       });
 
       $("#canvas").mouseleave(function(e) {
-        point = false;
+        paint = false;
       });
+
+
 
       var clickX = new Array();
       var clickY = new Array();
@@ -290,6 +288,7 @@ Leap.loop(controllerOptions, function(frame) {
         clickDrag.push(dragging);
         clickColor.push(curColor);
       }
+    } }
       //Display paths drawn
       function redraw() {
         context.clearRect(0, 0, context.canvas.width, context.canvas.height);
@@ -343,6 +342,55 @@ function pauseForGestures() {
   }
 }
   </script>
+
+<canvas id="displayArea" width="1000" height="500" style="background:#dddddd;"></canvas>
+<script>
+var canvasElement = document.getElementById("displayArea");
+var displayArea = canvasElement.getContext("2d");
+
+var controller = new Leap.Controller();
+
+var clickX = new Array();
+var clickY = new Array();
+var clickDrag = new Array();
+var clickColor = new Array();
+
+controller.on("frame", function(frame){
+    if(frame.pointables.length > 0)
+    {
+        canvasElement.width = canvasElement.width; //clear
+        
+        //Get a pointable and normalize the tip position
+        var pointable = frame.pointables[0];
+        var interactionBox = frame.interactionBox;
+        var normalizedPosition = interactionBox.normalizePoint(pointable.tipPosition, true);
+        
+        // Convert the normalized coordinates to span the canvas
+        var canvasX = canvasElement.width * normalizedPosition[0];
+        var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+        //we can ignore z for a 2D context
+
+        clickX.push(canvasX);
+        clickY.push(canvasY);
+        clickColor.push(curColor);
+
+        displayArea.lineJoiun = "round";
+        displayArea.lineWidth = 5;
+
+        for (var i = 1; i < clickX.length; i++) {
+          displayArea.beginPath();
+          displayArea.moveTo(clickX[i-1], clickY[i-1]);
+        
+
+          displayArea.lineTo(clickX[i], clickY[i]);
+          displayArea.closePath();
+          displayArea.strokeStyle = clickColor[i];
+          displayArea.stroke();
+        }        
+    }
+});
+controller.connect();
+</script>
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
