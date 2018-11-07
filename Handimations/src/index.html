@@ -61,7 +61,7 @@ Leap.loop(controllerOptions, function(frame) {
     var hand = frame.hands[0];
   }
   else {
-    window.alert("Need exactly one hand in frame");
+    //window.alert("Need exactly one hand in frame");
   }
 
   // Display Pointable (finger and tool) object data
@@ -85,13 +85,13 @@ Leap.loop(controllerOptions, function(frame) {
         pointableString += "</div>";
       }
       else {
-        pointableString += "Pointable ID: " + pointable.id + "<br />";
+        //pointableString += "Pointable ID: " + pointable.id + "<br />";
         pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
-        pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+        //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
         pointableString += "Classified as a finger<br />";
-        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
         pointableString += "Extended?: "  + pointable.extended + "<br />";
         pointable.bones.forEach( function(bone){
           pointableString += boneTypeMap[bone.type] + " bone <br />";
@@ -264,6 +264,23 @@ function pauseForGestures() {
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
+
+<h1>Leap Motion JavaScript Sample</h1>
+<div id="main">
+  <button id="pause" onclick="togglePause()">Pause</button>
+  <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
+  <h3>Frame data:</h3>
+  <div id="frameData"></div>
+  <div style="clear:both;"></div>
+  <h3>Hand data:</h3>
+  <div id="handData"></div>
+  <div style="clear:both;"></div>
+  <h3>Finger and tool data:</h3>
+  <div id="pointableData"></div>
+  <div style="clear:both;"></div>
+  <h3>Gesture data:</h3>
+  <div id="gestureData"></div>
+</div>
 
 </body>
 
