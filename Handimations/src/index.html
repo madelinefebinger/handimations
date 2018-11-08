@@ -30,83 +30,424 @@
   </div>
 
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+
   <script>
-    var canvasDiv = document.getElementById('canvasDiv');
-    canvas = document.createElement('canvas');
-    canvas.setAttribute('width', '1000');
-    canvas.setAttribute('height', '500');
-    canvas.setAttribute('id', 'canvas');
-    canvasDiv.appendChild(canvas);
-    if (typeof G_vmlCanvasManager != 'undefined') {
-      canvas = G_vmlCanvasManager.initElement(canvas);
-    }
-    context = canvas.getContext("2d");
-    var curColor = '#123321';
-    var clickColor = new Array();
-    $("#canvas").mousedown(function(e) {
-      var mouseX = e.pageX - this.offsetLeft;
-      var mouseY = e.pageY - this.offsetTop;
+    //REMOVE THIS SECTION LATER
+    // Create canvas
+  var canvasDiv = document.getElementById('canvasDiv');
+  canvas = document.createElement('canvas');
+  canvas.setAttribute('width', '1000');
+  canvas.setAttribute('height', '500');
+  canvas.setAttribute('id', 'canvas');
+  canvasDiv.appendChild(canvas);
+  if (typeof G_vmlCanvasManager != 'undefined') {
+    canvas = G_vmlCanvasManager.initElement(canvas);
+  }
+  context = canvas.getContext("2d");
+  var curColor = '#123321';
+  var clickColor = new Array();
 
-      paint = true;
-      addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop);
+  // Drawing with mouse
+  $("#canvas").mousedown(function(e) {
+    var mouseX = e.pageX - this.offsetLeft;
+    var mouseY = e.pageY - this.offsetTop;
+
+    paint = true;
+    addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop);
+    redraw();
+  });
+
+  $("#canvas").mousemove(function(e) {
+    if (paint) {
+      addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
       redraw();
-    });
+    }
+  });
 
-    $("#canvas").mousemove(function(e) {
-      if (paint) {
-        addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
+  $("#canvas").mouseup(function(e) {
+    paint = false;
+  });
+
+  $("#canvas").mouseleave(function(e) {
+    point = false;
+  });
+
+  var clickX = new Array();
+  var clickY = new Array();
+  var clickDrag = new Array();
+  var paint;
+
+  function setStrokeColor(picker) {
+    curColor = '#' + picker.toString();
+  }
+
+  function addClick(x, y, dragging) {
+    clickX.push(x);
+    clickY.push(y);
+    clickDrag.push(dragging);
+    clickColor.push(curColor);
+  }
+  //Display paths drawn
+  function redraw() {
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+    context.lineJoiun = "round";
+    context.lineWidth = 5;
+
+    for (var i = 0; i < clickX.length; i++) {
+      context.beginPath();
+      if (clickDrag[i] && i) {
+        context.moveTo(clickX[i - 1], clickY[i - 1]);
+      } else {
+        context.moveTo(clickX[i] - 1, clickY[i]);
+      }
+
+      context.lineTo(clickX[i], clickY[i]);
+      context.closePath();
+      context.strokeStyle = clickColor[i];
+      context.stroke();
+    }
+  }
+
+// Store frame for motion functions
+var previousFrame = null;
+var paused = false;
+var pauseOnGesture = false;
+
+// Setup Leap loop with frame callback function
+var controllerOptions = {enableGestures: true};
+
+// to use HMD mode:
+// controllerOptions.optimizeHMD = true;
+
+
+Leap.loop(controllerOptions, function(frame) {
+  if (paused) {
+    return; // Skip this update
+  }
+
+  // Display Frame object data
+  var frameOutput = document.getElementById("frameData");
+
+  // Frame motion factors
+  if (previousFrame && previousFrame.valid) {
+    var translation = frame.translation(previousFrame);
+    var scaleFactor = frame.scaleFactor(previousFrame);
+  }
+
+  // Display Pointable (finger and tool) object data
+  var pointableOutput = document.getElementById("pointableData");
+  var pointableString = "";
+  if (frame.pointables.length > 0) {
+    var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
+    var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+    for (var i = 0; i < frame.pointables.length; i++) {
+      var pointable = frame.pointables[i];
+
+      pointableString += "<div style='width:250px; float:left; padding:5px'>";
+
+      if (pointable.tool) {
+        pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Classified as a tool <br />";
+        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
+        pointableString += "</div>";
+      }
+      else {
+        //pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
+        //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+        pointableString += "Classified as a finger<br />";
+        //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Extended?: "  + pointable.extended + "<br />";
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
+        pointableString += "</div>";
+      }
+    }
+  }
+  else {
+    pointableString += "<div>No pointables</div>";
+  }
+  pointableOutput.innerHTML = pointableString;
+
+  // Display Gesture object data
+  var gestureOutput = document.getElementById("gestureData");
+  var gestureString = "";
+  if (frame.gestures.length > 0) {
+    if (pauseOnGesture) {
+      togglePause();
+    }
+    for (var i = 0; i < frame.gestures.length; i++) {
+      var gesture = frame.gestures[i];
+      gestureString += "Gesture ID: " + gesture.id + ", "
+                    + "type: " + gesture.type + ", "
+                    + "state: " + gesture.state + ", "
+                    + "hand IDs: " + gesture.handIds.join(", ") + ", "
+                    + "pointable IDs: " + gesture.pointableIds.join(", ") + ", "
+                    + "duration: " + gesture.duration + " &micro;s, ";
+
+      switch (gesture.type) {
+        case "circle":
+          gestureString += "center: " + vectorToString(gesture.center) + " mm, "
+                        + "normal: " + vectorToString(gesture.normal, 2) + ", "
+                        + "radius: " + gesture.radius.toFixed(1) + " mm, "
+                        + "progress: " + gesture.progress.toFixed(2) + " rotations";
+          break;
+        case "swipe":
+          gestureString += "start position: " + vectorToString(gesture.startPosition) + " mm, "
+                        + "current position: " + vectorToString(gesture.position) + " mm, "
+                        + "direction: " + vectorToString(gesture.direction, 1) + ", "
+                        + "speed: " + gesture.speed.toFixed(1) + " mm/s";
+          break;
+        case "screenTap":
+        case "keyTap":
+          gestureString += "position: " + vectorToString(gesture.position) + " mm";
+          break;
+        default:
+          gestureString += "unkown gesture type";
+      }
+      gestureString += "<br />";
+    }
+  }
+  else {
+    gestureString += "No gestures";
+  }
+  //gestureOutput.innerHTML = gestureString;
+
+  // Start drawing code
+      // Leap Motion
+      if (frame.hands.length != 0) {
+      	console.log("Please use exactly 1 hand at a time");
+      }else{
+
+      let thumb = frame.pointables[0];
+      let index = frame.pointables[1];
+      let middle = frame.pointables[2];
+      let ring = frame.pointables[3];
+      let pinky = frame.pointables[4];
+
+      if ( (thumb != undefined)&&(index != undefined)&&(middle != undefined)&&(ring != undefined)&&(pinky != undefined) ){
+
+      // allows you to revert to drawing color after erasing
+      let lastColor = curColor;
+
+      if(!thumb.extended && index.extended && !middle.extended && !ring.extended && !pinky.extended){
+      	paint = true;
+      }
+      else if(!thumb.extended && !index.extended && !middle.extended && !ring.extended && pinky.extended){
+      	paint = true;
+      	lastColor = curColor;
+      	curColor = "#ffffff";
+      }
+      else{
+      	paint = false;
+      	curColor = lastColor;
+      }
+      // End Leap Motion
+
+      $("#canvas").mousedown(function(e) {
+        var mouseX = e.pageX - this.offsetLeft;
+        var mouseY = e.pageY - this.offsetTop;
+
+        paint = true;
+        addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop);
         redraw();
-      }
-    });
+      });
 
-    $("#canvas").mouseup(function(e) {
-      paint = false;
-    });
-
-    $("#canvas").mouseleave(function(e) {
-      point = false;
-    });
-
-    var clickX = new Array();
-    var clickY = new Array();
-    var clickDrag = new Array();
-    var paint;
-
-    function setStrokeColor(picker) {
-      curColor = '#' + picker.toString();
-    }
-
-    function addClick(x, y, dragging) {
-      clickX.push(x);
-      clickY.push(y);
-      clickDrag.push(dragging);
-      clickColor.push(curColor);
-    }
-
-    function redraw() {
-      context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-      context.lineJoiun = "round";
-      context.lineWidth = 5;
-
-      for (var i = 0; i < clickX.length; i++) {
-        context.beginPath();
-        if (clickDrag[i] && i) {
-          context.moveTo(clickX[i - 1], clickY[i - 1]);
-        } else {
-          context.moveTo(clickX[i] - 1, clickY[i]);
+      $("#canvas").mousemove(function(e) {
+        if (paint) {
+          addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
+          redraw();
         }
+      });
 
-        context.lineTo(clickX[i], clickY[i]);
-        context.closePath();
-        context.strokeStyle = clickColor[i];
-        context.stroke();
+      $("#canvas").mouseup(function(e) {
+        paint = false;
+      });
+
+      $("#canvas").mouseleave(function(e) {
+        paint = false;
+      });
+
+
+
+      var clickX = new Array();
+      var clickY = new Array();
+      var clickDrag = new Array();
+      var paint;
+
+      function setStrokeColor(picker) {
+        curColor = '#' + picker.toString();
+      }
+
+      function addClick(x, y, dragging) {
+        clickX.push(x);
+        clickY.push(y);
+        clickDrag.push(dragging);
+        clickColor.push(curColor);
+      }
+    } }
+      //Display paths drawn
+      function redraw() {
+        context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+        context.lineJoiun = "round";
+        context.lineWidth = 5;
+
+        for (var i = 0; i < clickX.length; i++) {
+          context.beginPath();
+          if (clickDrag[i] && i) {
+            context.moveTo(clickX[i - 1], clickY[i - 1]);
+          } else {
+            context.moveTo(clickX[i] - 1, clickY[i]);
+          }
+
+          context.lineTo(clickX[i], clickY[i]);
+          context.closePath();
+          context.strokeStyle = clickColor[i];
+          context.stroke();
+        }
+      }
+
+  // Store frame for motion functions
+  previousFrame = frame;
+})
+
+function vectorToString(vector, digits) {
+  if (typeof digits === "undefined") {
+    digits = 1;
+  }
+  return "(" + vector[0].toFixed(digits) + ", "
+             + vector[1].toFixed(digits) + ", "
+             + vector[2].toFixed(digits) + ")";
+}
+
+function togglePause() {
+  paused = !paused;
+
+  if (paused) {
+    document.getElementById("pause").innerText = "Resume";
+  } else {
+    document.getElementById("pause").innerText = "Pause";
+  }
+}
+
+function pauseForGestures() {
+  if (document.getElementById("pauseOnGesture").checked) {
+    pauseOnGesture = true;
+  } else {
+    pauseOnGesture = false;
+  }
+}
+  </script>
+
+<canvas id="displayArea" width="1000" height="500" style="background:#dddddd;"></canvas>
+<script>
+var canvasElement = document.getElementById("displayArea");
+var displayArea = canvasElement.getContext("2d");
+
+var controller = new Leap.Controller();
+
+var clickX = new Array();
+var clickY = new Array();
+var clickDrag = new Array();
+var clickColor = new Array();
+
+controller.on("frame", function(frame){
+  // Display Pointable (finger and tool) object data
+  var pointableOutput = document.getElementById("pointableData");
+  var pointableString = "";
+  if (frame.pointables.length > 0) {
+    var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
+    var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+    for (var i = 0; i < frame.pointables.length; i++) {
+      var pointable = frame.pointables[i];
+
+      pointableString += "<div style='width:250px; float:left; padding:5px'>";
+
+      if (pointable.tool) {
+        pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Classified as a tool <br />";
+        pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
+        pointableString += "</div>";
+      }
+      else {
+        //pointableString += "Pointable ID: " + pointable.id + "<br />";
+        pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
+        //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+        pointableString += "Classified as a finger<br />";
+        //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+        //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+        //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+        pointableString += "Extended?: "  + pointable.extended + "<br />";
+        pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
+        pointableString += "</div>";
       }
     }
-  </script>
+  }
+  else {
+    pointableString += "<div>No pointables</div>";
+  }
+  pointableOutput.innerHTML = pointableString;
+
+
+
+    if(frame.pointables.length > 0)
+    {
+        canvasElement.width = canvasElement.width; //clear
+        
+        //Get a pointable and normalize the tip position
+        var pointable = frame.pointables[0];
+        var interactionBox = frame.interactionBox;
+        var normalizedPosition = interactionBox.normalizePoint(pointable.tipPosition, true);
+        
+        // Convert the normalized coordinates to span the canvas
+        var canvasX = canvasElement.width * normalizedPosition[0];
+        var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+        //we can ignore z for a 2D context
+
+        clickX.push(canvasX);
+        clickY.push(canvasY);
+        clickColor.push(curColor);
+
+        displayArea.lineJoiun = "round";
+        displayArea.lineWidth = 5;
+
+        for (var i = 1; i < clickX.length; i++) {
+          displayArea.beginPath();
+          displayArea.moveTo(clickX[i-1], clickY[i-1]);
+        
+
+          displayArea.lineTo(clickX[i], clickY[i]);
+          displayArea.closePath();
+          displayArea.strokeStyle = clickColor[i];
+          displayArea.stroke();
+        }        
+    }
+});
+controller.connect();
+</script>
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
+
+  <h1>Leap Motion JavaScript Sample</h1>
+  <div id="main">
+    <button id="pause" onclick="togglePause()">Pause</button>
+    <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
+    <div style="clear:both;"></div>
+    <h3>Finger and tool data:</h3>
+    <div id="pointableData"></div>
+    <div style="clear:both;"></div>
+  </div>
 
 </body>
 
