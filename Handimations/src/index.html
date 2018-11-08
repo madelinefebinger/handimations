@@ -120,21 +120,33 @@ controller.on("frame", function(frame){
     if(frame.pointables.length > 0)
     {
         canvasElement.width = canvasElement.width; //clear
-
+        var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
         //Get a pointable and normalize the tip position
-        var pointable = frame.pointables[0];
-        var interactionBox = frame.interactionBox;
-        var normalizedPosition = interactionBox.normalizePoint(pointable.tipPosition, true);
+        //var pointable = frame.pointables[0];
+        var drawMode = false;
+        var indexFinger = frame.pointables[0];
+        // Check if it's an index finger and it's extended
+        for (i = 0; i < frame.pointables.length; i++) {
+          if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ){
+            indexFinger = frame.pointables[i];
+            drawMode = true;
+          }
+        }
+        if (drawMode){
+          var interactionBox = frame.interactionBox;
+          var normalizedPosition = interactionBox.normalizePoint(indexFinger.tipPosition, true);
 
-        // Convert the normalized coordinates to span the canvas
-        var canvasX = canvasElement.width * normalizedPosition[0];
-        var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
-        //we can ignore z for a 2D context
-        clickX.push(canvasX);
-        clickY.push(canvasY);
-        clickColor.push(curColor);
-        displayArea.lineJoiun = "round";
-        displayArea.lineWidth = 5;
+          // Convert the normalized coordinates to span the canvas
+          var canvasX = canvasElement.width * normalizedPosition[0];
+          var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+          //we can ignore z for a 2D context
+          clickX.push(canvasX);
+          clickY.push(canvasY);
+          clickColor.push(curColor);
+        }
+          displayArea.lineJoiun = "round";
+          displayArea.lineWidth = 5;
+        
         for (var i = 1; i < clickX.length; i++) {
           displayArea.beginPath();
           displayArea.moveTo(clickX[i-1], clickY[i-1]);
