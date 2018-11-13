@@ -63,12 +63,13 @@ function pauseForGestures() {
 }
 </script>
 
-<canvas id="displayArea" width="1000" height="500" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
+<canvas id="displayArea" width="800" height="400" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
 <script>
 var canvasElement = document.getElementById("displayArea");
 var displayArea = canvasElement.getContext("2d");
 var controller = new Leap.Controller();
 
+var drawMode = false;
 var curColor = '#123321';
 var clickX = new Array();
 var clickY = new Array();
@@ -123,15 +124,28 @@ controller.on("frame", function(frame){
         var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
         //Get a pointable and normalize the tip position
         //var pointable = frame.pointables[0];
-        var drawMode = false;
+        //var drawMode = false;
+
         var indexFinger = frame.pointables[0];
-        // Check if it's an index finger and it's extended
-        for (i = 0; i < frame.pointables.length; i++) {
-          if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ){
-            indexFinger = frame.pointables[i];
-            drawMode = true;
+        if (!drawMode){ // Check if we need to go into draw mode
+
+          // Check if it's an index finger and it's extended
+          for (i = 0; i < frame.pointables.length; i++) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ){
+              indexFinger = frame.pointables[i];
+              drawMode = true;
+            }
+          }
+
+        }
+        else{ // If we're in draw mode, check if the index finger is no longer extended 
+          for (i = 0; i < frame.pointables.length; i++) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (!frame.pointables[i].extended) ){
+              drawMode = false;
+            }
           }
         }
+
         if (drawMode){
           var interactionBox = frame.interactionBox;
           var normalizedPosition = interactionBox.normalizePoint(indexFinger.tipPosition, true);
@@ -164,8 +178,8 @@ controller.connect();
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
 
-  <h1>Leap Motion JavaScript Sample</h1>
   <div id="main">
+    <!-- <h1>Leap Motion Data</h1> -->
     <button id="pause" onclick="togglePause()">Pause</button>
     <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
     <div style="clear:both;"></div>
