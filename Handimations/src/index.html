@@ -10,7 +10,7 @@
 
   <link rel="manifest" href="site.webmanifest">
 
-  <link rel="stylesheet" href="css/normalize.css">
+  <!-- <link rel="stylesheet" href="css/normalize.css"> -->
   <link rel="stylesheet" href="css/main.css">
   <link href="https://fonts.googleapis.com/css?family=Cabin+Sketch|Jua|Open+Sans" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
@@ -70,11 +70,19 @@ var displayArea = canvasElement.getContext("2d");
 var controller = new Leap.Controller();
 
 var drawMode = false;
-var curColor = '#123321';
+var curColor = '#b642f4';
 var clickX = new Array();
 var clickY = new Array();
 var clickDrag = new Array();
 var clickColor = new Array();
+
+var clickLines = new Array();
+var line = new Array();
+line.push(clickX);
+line.push(clickY);
+line.push(clickColor);
+clickLines.push(line);
+var curLine = 0;
 
 //set color to value selected from color picker
 function setStrokeColor(picker) {
@@ -134,6 +142,9 @@ controller.on("frame", function(frame){
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ){
               indexFinger = frame.pointables[i];
               drawMode = true;
+              clickX = new Array();
+              clickY = new Array();
+              clickColor = new Array();
             }
           }
 
@@ -141,7 +152,15 @@ controller.on("frame", function(frame){
         else{ // If we're in draw mode, check if the index finger is no longer extended 
           for (i = 0; i < frame.pointables.length; i++) {
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (!frame.pointables[i].extended) ){
+              // Toggle out of drawMode
               drawMode = false;
+              // Push to clickLines
+              var line = new Array();
+              line.push(clickX);
+              line.push(clickY);
+              line.push(clickColor);
+              clickLines.push(line);
+              curLine++;
             }
           }
         }
@@ -154,13 +173,30 @@ controller.on("frame", function(frame){
           var canvasX = canvasElement.width * normalizedPosition[0];
           var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
           //we can ignore z for a 2D context
-          clickX.push(canvasX);
-          clickY.push(canvasY);
-          clickColor.push(curColor);
+          clickLines[curLine][0].push(canvasX);
+          clickLines[curLine][1].push(canvasY);
+          clickLines[curLine][2].push(curColor);
         }
           displayArea.lineJoiun = "round";
           displayArea.lineWidth = 5;
         
+          for (var i = 0; i < clickLines.length; i++){ //For every line segment
+            var line = clickLines[i];
+            var xPoints = line[0];
+            var yPoints = line[1];
+            var colorPoints = line[2];
+            for (var j = 1; j < xPoints.length; j++){//For every point on these lines
+              displayArea.beginPath();
+              displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
+
+              displayArea.lineTo(xPoints[j], yPoints[j]);
+              displayArea.closePath();
+              displayArea.strokeStyle = colorPoints[j];
+              displayArea.stroke();
+            }
+          }
+
+        /*
         for (var i = 1; i < clickX.length; i++) {
           displayArea.beginPath();
           displayArea.moveTo(clickX[i-1], clickY[i-1]);
@@ -170,6 +206,7 @@ controller.on("frame", function(frame){
           displayArea.strokeStyle = clickColor[i];
           displayArea.stroke();
         }
+        */
     }
 });
 controller.connect();
