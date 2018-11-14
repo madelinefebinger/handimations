@@ -17,8 +17,9 @@
   <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
 
   <script src="js/jscolor.js"></script>
-</head>
 
+  <img id="pencil-cursor" src="img/pencil-cursor.png" style="display: none">
+</head>
 <body>
 
   <h1>Handimations</h1>
@@ -63,13 +64,14 @@ function pauseForGestures() {
 }
 </script>
 
-<canvas id="displayArea" width="800" height="400" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
+<canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
 <script>
 var canvasElement = document.getElementById("displayArea");
 var displayArea = canvasElement.getContext("2d");
 var controller = new Leap.Controller();
 
 var drawMode = false;
+
 var curColor = '#b642f4';
 var clickX = new Array();
 var clickY = new Array();
@@ -83,6 +85,8 @@ line.push(clickY);
 line.push(clickColor);
 clickLines.push(line);
 var curLine = 0;
+
+var pencilImg = document.getElementById("pencil-cursor");
 
 //set color to value selected from color picker
 function setStrokeColor(picker) {
@@ -155,7 +159,7 @@ controller.on("frame", function(frame){
               // Toggle out of drawMode
               drawMode = false;
               // Push to clickLines
-              var line = new Array();
+              line = new Array();
               line.push(clickX);
               line.push(clickY);
               line.push(clickColor);
@@ -165,14 +169,16 @@ controller.on("frame", function(frame){
           }
         }
 
-        if (drawMode){
+
           var interactionBox = frame.interactionBox;
-          var normalizedPosition = interactionBox.normalizePoint(indexFinger.tipPosition, true);
+          var normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
 
           // Convert the normalized coordinates to span the canvas
           var canvasX = canvasElement.width * normalizedPosition[0];
           var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
           //we can ignore z for a 2D context
+
+        if (drawMode){          
           clickLines[curLine][0].push(canvasX);
           clickLines[curLine][1].push(canvasY);
           clickLines[curLine][2].push(curColor);
@@ -195,6 +201,8 @@ controller.on("frame", function(frame){
               displayArea.stroke();
             }
           }
+
+          displayArea.drawImage(pencilImg,canvasX,canvasY-25); //draw pencil cursor
 
         /*
         for (var i = 1; i < clickX.length; i++) {
