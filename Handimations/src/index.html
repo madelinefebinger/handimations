@@ -73,6 +73,7 @@
   var eraseMode = false;
 
   var curColor = "#b642f4";
+  var prevColor = curColor;
   var clickX = new Array();
   var clickY = new Array();
   var clickDrag = new Array();
@@ -91,6 +92,14 @@
   //set color to value selected from color picker
   function setStrokeColor(picker) {
     curColor = "#" + picker.toString();
+  }
+
+  function isControlFinger(controllerFingerIdx) {
+    var isOnlyOneExtended = true;
+    for (j = 0; j < frame.pointables.length; j++) {
+      isOnlyOneExtended = ( (j != controllerFingerIdx) && (!frame.pointables[j].extended) );
+    }
+    return isOnlyOneExtended;
   }
 
   controller.on("frame", function(frame) {
@@ -131,50 +140,50 @@
     }
 
     pointableOutput.innerHTML = pointableString;
-    if(frame.pointables.length > 0) {
+    if (frame.pointables.length == 0) {
+      drawMode = false;
+      eraseMode = false;
+    }
+    else {
         canvasElement.width = canvasElement.width; //clear
         var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
         //Get a pointable and normalize the tip position
         //var pointable = frame.pointables[0];
         //var drawMode = false;
 
-        var indexFinger = frame.pointables[0];
-        if (!drawMode && !eraseMode){ // Check if we need to go into an active mode
+        var controllerFinger = frame.pointables[0];
+        if (!drawMode && !eraseMode){ // Check if we need to toggle mode on
           // Check if it's an index finger and it's the only one extended
           // Alternatively, check if it's a pinky finger and it's the only oneextended
           for (i = 0; i < frame.pointables.length; i++) {
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
-              for (j = 0; j < frame.pointables.length; j++) {
-                drawMode = ( (j != i) && (!frame.pointables[j].extended) );
-              }
-              indexFinger = frame.pointables[i];
+              drawMode = isControlFinger(i);
               if (drawMode) {
+                controllerFinger = frame.pointables[i];
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
                 document.getElementById("color").disabled = false;
-                eraseMode = false;
               }
             }
+            // Alternatively, check if it's a pinky finger and it's the only oneextended
             else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
-              for (j = 0; j < frame.pointables.length; j++) {
-                eraseMode = ( (j != i) && (!frame.pointables[j].extended) );
-              }
-              pinkyFinger = frame.pointables[i];
+              eraseMode = isControlFinger(i);
               if (eraseMode) {
+                controllerFinger = frame.pointables[i];
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
-                curColor = "#ffffff";
+                prevColor = curColor;
+                curColor = "#aaaaaa";
                 document.getElementById("color").disabled = true;
-                drawMode = false;
               }
             }
           }
         }
         else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (!frame.pointables[i].extended) ) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i) ) {
               // Toggle out of drawMode
               drawMode = false;
               // Push to clickLines
@@ -190,7 +199,7 @@
         }
         else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (!frame.pointables[i].extended) ) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i) ) {
               // Toggle out of drawMode
               eraseMode = false;
               // Push to clickLines
@@ -200,18 +209,14 @@
               line.push(clickColor);
               clickLines.push(line);
               curLine++;
+              curColor = prevColor;
               break;
             }
           }
         }
 
         var interactionBox = frame.interactionBox;
-        if (drawMode) {
-          var normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
-        }
-        if (eraseMode) {
-          var normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
-        }
+        var normalizedPosition = interactionBox.normalizePoint(controllerFinger.stabilizedTipPosition, true);
 
         // Convert the normalized coordinates to span the canvas
         var canvasX = canvasElement.width * normalizedPosition[0];
