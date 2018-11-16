@@ -71,6 +71,7 @@ var displayArea = canvasElement.getContext("2d");
 var controller = new Leap.Controller();
 
 var drawMode = false;
+var eraseMode = false;
 
 var curColor = '#b642f4';
 var clickX = new Array();
@@ -139,11 +140,11 @@ controller.on("frame", function(frame){
         //var drawMode = false;
 
         var indexFinger = frame.pointables[0];
-        if (!drawMode){ // Check if we need to go into draw mode
+        if (!drawMode && !eraseMode){ // Check if we need to go into draw mode
 
           // Check if it's an index finger and it's extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ){
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
               for (j = 0; j < frame.pointables.length; j++) {
                 drawMode = ( (j != i) && (!frame.pointables[j].extended) );
               }
@@ -152,14 +153,29 @@ controller.on("frame", function(frame){
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
+                document.getElementById("color").disabled = false;
+                eraseMode = false;
               }
             }
+            else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
+              for (j = 0; j < frame.pointables.length; j++) {
+                eraseMode = ( (j != i) && (!frame.pointables[j].extended) );
+              }
+              pinkyFinger = frame.pointables[i];
+              if (eraseMode) {
+                clickX = new Array();
+                clickY = new Array();
+                clickColor = new Array();
+                curColor = #ffffff;
+                document.getElementById("color").disabled = true;
+                drawMode = false;
+              }
           }
 
         }
-        else{ // If we're in draw mode, check if the index finger is no longer extended
+        else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (!frame.pointables[i].extended) ){
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (!frame.pointables[i].extended) ) {
               // Toggle out of drawMode
               drawMode = false;
               // Push to clickLines
@@ -175,14 +191,19 @@ controller.on("frame", function(frame){
 
 
           var interactionBox = frame.interactionBox;
-          var normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
+          if (drawMode) {
+            var normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
+          }
+          if (eraseMode) {
+            var normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
+          }
 
           // Convert the normalized coordinates to span the canvas
           var canvasX = canvasElement.width * normalizedPosition[0];
           var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
           //we can ignore z for a 2D context
 
-        if (drawMode){
+        if (drawMode || eraseMode){
           clickLines[curLine][0].push(canvasX);
           clickLines[curLine][1].push(canvasY);
           clickLines[curLine][2].push(curColor);
