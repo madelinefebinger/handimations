@@ -73,6 +73,7 @@
   var eraseMode = false;
 
   var curColor = "#b642f4";
+  var prevColor = curColor;
   var clickX = new Array();
   var clickY = new Array();
   var clickDrag = new Array();
@@ -91,6 +92,14 @@
   //set color to value selected from color picker
   function setStrokeColor(picker) {
     curColor = "#" + picker.toString();
+  }
+
+  function isControlFinger(controllerFingerIdx) {
+    var isOnlyOneExtended = true;
+    for (j = 0; j < frame.pointables.length; j++) {
+      isOnlyOneExtended = ( (j != controllerFingerIdx) && (!frame.pointables[j].extended) );
+    }
+    return isOnlyOneExtended;
   }
 
   controller.on("frame", function(frame) {
@@ -131,7 +140,11 @@
     }
 
     pointableOutput.innerHTML = pointableString;
-    if(frame.pointables.length > 0) {
+    if (frame.pointables.length == 0) {
+      drawMode = false;
+      eraseMode = false;
+    }
+    else {
         canvasElement.width = canvasElement.width; //clear
         var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
         //Get a pointable and normalize the tip position
@@ -149,22 +162,26 @@
               }
               controllerFinger = frame.pointables[i];
               if (drawMode) {
+                controllerFinger = frame.pointables[i];
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
                 document.getElementById("color").disabled = false;
               }
             }
+            // Alternatively, check if it's a pinky finger and it's the only oneextended
             else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
               for (j = 0; j < frame.pointables.length; j++) {
                 eraseMode = ( (j != i) && (!frame.pointables[j].extended) );
               }
               controllerFinger = frame.pointables[i];
               if (eraseMode) {
+                controllerFinger = frame.pointables[i];
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
-                curColor = "#ffffff";
+                prevColor = curColor;
+                curColor = "#aaaaaa";
                 document.getElementById("color").disabled = true;
               }
             }
@@ -172,7 +189,7 @@
         }
         else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (!frame.pointables[i].extended) ) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i) ) {
               // Toggle out of drawMode
               drawMode = false;
               // Push to clickLines
@@ -188,7 +205,7 @@
         }
         else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (!frame.pointables[i].extended) ) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i) ) {
               // Toggle out of drawMode
               eraseMode = false;
               // Push to clickLines
@@ -198,6 +215,7 @@
               line.push(clickColor);
               clickLines.push(line);
               curLine++;
+              curColor = prevColor;
               break;
             }
           }
