@@ -144,16 +144,20 @@ controller.on("frame", function(frame){
           // Check if it's an index finger and it's extended
           for (i = 0; i < frame.pointables.length; i++) {
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ){
+              for (j = 0; j < frame.pointables.length; j++) {
+                drawMode = ( (j != i) && (!frame.pointables[j].extended) );
+              }
               indexFinger = frame.pointables[i];
-              drawMode = true;
-              clickX = new Array();
-              clickY = new Array();
-              clickColor = new Array();
+              if (drawMode) {
+                clickX = new Array();
+                clickY = new Array();
+                clickColor = new Array();
+              }
             }
           }
 
         }
-        else{ // If we're in draw mode, check if the index finger is no longer extended 
+        else{ // If we're in draw mode, check if the index finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (!frame.pointables[i].extended) ){
               // Toggle out of drawMode
@@ -178,14 +182,14 @@ controller.on("frame", function(frame){
           var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
           //we can ignore z for a 2D context
 
-        if (drawMode){          
+        if (drawMode){
           clickLines[curLine][0].push(canvasX);
           clickLines[curLine][1].push(canvasY);
           clickLines[curLine][2].push(curColor);
         }
           displayArea.lineJoiun = "round";
           displayArea.lineWidth = 5;
-        
+
           for (var i = 0; i < clickLines.length; i++){ //For every line segment
             var line = clickLines[i];
             var xPoints = line[0];
