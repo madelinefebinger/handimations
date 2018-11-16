@@ -78,14 +78,11 @@
   var clickY = new Array();
   var clickDrag = new Array();
   var clickColor = new Array();
+  var clickMode = "draw";
 
   var clickLines = new Array();
-  var line = new Array();
-  line.push(clickX);
-  line.push(clickY);
-  line.push(clickColor);
-  clickLines.push(line);
-  var curLine = 0;
+  var curLine = -1;
+  addLine();
 
   var pencilImg = document.getElementById("pencil-cursor");
 
@@ -97,11 +94,21 @@
   function isControlFinger(controllerFingerIdx, frame) {
     var isOnlyOneExtended = true;
     for (j = 0; j < frame.pointables.length; j++) {
-      if ( j != controllerFingerIdx ) {
+      if (j != controllerFingerIdx) {
         isOnlyOneExtended = !frame.pointables[j].extended;
       }
     }
     return isOnlyOneExtended;
+  }
+
+  function addLine() {
+    var line = new Array();
+    line.push(clickX);
+    line.push(clickY);
+    line.push(clickColor);
+    line.push(clickMode);
+    clickLines.push(line);
+    curLine++;
   }
 
   controller.on("frame", function(frame) {
@@ -165,19 +172,19 @@
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
+                clickMode = "draw";
                 document.getElementById("color").disabled = false;
               }
             }
             // Alternatively, check if it's a pinky finger and it's the only oneextended
             else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
               eraseMode = isControlFinger(i, frame);
-
               if (eraseMode) {
-                console.log("Inside erase mode");
                 controllerFinger = frame.pointables[i];
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
+                clickMode = "erase";
                 prevColor = curColor;
                 curColor = "#ffffff";
                 document.getElementById("color").disabled = true;
@@ -187,37 +194,22 @@
         }
         else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
-
               // Toggle out of drawMode
               drawMode = false;
               // Push to clickLines
-              line = new Array();
-              line.push(clickX);
-              line.push(clickY);
-              line.push(clickColor);
-              clickLines.push(line);
-              curLine++;
+              addLine();
               break;
             }
           }
         }
         else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
-
           for (i = 0; i < frame.pointables.length; i++) {
-
             if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
-
-              // Toggle out of drawMode
+              // Toggle out of eraseMode
               eraseMode = false;
               // Push to clickLines
-              line = new Array();
-              line.push(clickX);
-              line.push(clickY);
-              line.push(clickColor);
-              clickLines.push(line);
-              curLine++;
+              addLine();
               curColor = prevColor;
               break;
             }
@@ -240,18 +232,16 @@
         }
         displayArea.lineJoiun = "round";
 
-        if(drawMode) {
-          displayArea.lineWidth = 5;
-        } else{
-          displayArea.lineWidth = 10;
-        }
-
-
         for (var i = 0; i < clickLines.length; i++) { //For every line segment
           var line = clickLines[i];
           var xPoints = line[0];
           var yPoints = line[1];
           var colorPoints = line[2];
+          if (line[3] == "draw") {
+            displayArea.lineWidth = 5;
+          } else {
+            displayArea.lineWidth = 10;
+          }
           for (var j = 1; j < xPoints.length; j++) {//For every point on these lines
             displayArea.beginPath();
             displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
