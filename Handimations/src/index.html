@@ -94,7 +94,7 @@
     curColor = "#" + picker.toString();
   }
 
-  function isControlFinger(controllerFingerIdx) {
+  function isControlFinger(controllerFingerIdx, frame) {
     var isOnlyOneExtended = true;
     for (j = 0; j < frame.pointables.length; j++) {
       isOnlyOneExtended = ( (j != controllerFingerIdx) && (!frame.pointables[j].extended) );
@@ -157,7 +157,7 @@
           // Alternatively, check if it's a pinky finger and it's the only oneextended
           for (i = 0; i < frame.pointables.length; i++) {
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
-              drawMode = isControlFinger(i);
+              drawMode = isControlFinger(i, frame);
               if (drawMode) {
                 controllerFinger = frame.pointables[i];
                 clickX = new Array();
@@ -168,7 +168,7 @@
             }
             // Alternatively, check if it's a pinky finger and it's the only oneextended
             else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
-              eraseMode = isControlFinger(i);
+              eraseMode = isControlFinger(i, frame);
               if (eraseMode) {
                 controllerFinger = frame.pointables[i];
                 clickX = new Array();
@@ -183,7 +183,7 @@
         }
         else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i) ) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) {
               // Toggle out of drawMode
               drawMode = false;
               // Push to clickLines
@@ -199,7 +199,7 @@
         }
         else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
           for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i) ) {
+            if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) {
               // Toggle out of drawMode
               eraseMode = false;
               // Push to clickLines
