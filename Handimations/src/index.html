@@ -229,6 +229,7 @@
           clickLines[curLine][0].push(canvasX);
           clickLines[curLine][1].push(canvasY);
           clickLines[curLine][2].push(curColor);
+          clickLines[curLine][3] = clickMode;
         }
         displayArea.lineJoiun = "round";
 
@@ -239,7 +240,8 @@
           var colorPoints = line[2];
           if (line[3] == "draw") {
             displayArea.lineWidth = 5;
-          } else {
+          }
+          else if (line[3] == "erase") {
             displayArea.lineWidth = 10;
           }
           for (var j = 1; j < xPoints.length; j++) {//For every point on these lines
