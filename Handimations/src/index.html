@@ -160,7 +160,6 @@
           for (i = 0; i < frame.pointables.length; i++) {
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
               drawMode = isControlFinger(i, frame);
-
               if (drawMode) {
                 controllerFinger = frame.pointables[i];
                 clickX = new Array();
@@ -173,7 +172,6 @@
             else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
               eraseMode = isControlFinger(i, frame);
 
-              console.log("Pinky finger");
               if (eraseMode) {
                 console.log("Inside erase mode");
                 controllerFinger = frame.pointables[i];
