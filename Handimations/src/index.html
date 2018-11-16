@@ -138,8 +138,8 @@
         //var pointable = frame.pointables[0];
         //var drawMode = false;
 
-        var indexFinger = frame.pointables[0];
-        if (!drawMode && !eraseMode){ // Check if we need to go into an active mode
+        var controllerFinger = frame.pointables[0];
+        if (!drawMode && !eraseMode){ // Check if we need to toggle mode on
           // Check if it's an index finger and it's the only one extended
           // Alternatively, check if it's a pinky finger and it's the only oneextended
           for (i = 0; i < frame.pointables.length; i++) {
@@ -147,27 +147,25 @@
               for (j = 0; j < frame.pointables.length; j++) {
                 drawMode = ( (j != i) && (!frame.pointables[j].extended) );
               }
-              indexFinger = frame.pointables[i];
+              controllerFinger = frame.pointables[i];
               if (drawMode) {
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
                 document.getElementById("color").disabled = false;
-                eraseMode = false;
               }
             }
             else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
               for (j = 0; j < frame.pointables.length; j++) {
                 eraseMode = ( (j != i) && (!frame.pointables[j].extended) );
               }
-              pinkyFinger = frame.pointables[i];
+              controllerFinger = frame.pointables[i];
               if (eraseMode) {
                 clickX = new Array();
                 clickY = new Array();
                 clickColor = new Array();
                 curColor = "#ffffff";
                 document.getElementById("color").disabled = true;
-                drawMode = false;
               }
             }
           }
@@ -206,11 +204,12 @@
         }
 
         var interactionBox = frame.interactionBox;
+        var normalizedPosition;
         if (drawMode) {
-          var normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
+          normalizedPosition = interactionBox.normalizePoint(controllerFinger.stabilizedTipPosition, true);
         }
-        if (eraseMode) {
-          var normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
+        else if (eraseMode) {
+          normalizedPosition = interactionBox.normalizePoint(controllerFinger.stabilizedTipPosition, true);
         }
 
         // Convert the normalized coordinates to span the canvas
