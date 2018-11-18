@@ -15,20 +15,16 @@
   <link href="https://fonts.googleapis.com/css?family=Cabin+Sketch|Jua|Open+Sans" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
   <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
+  <script src="https://unpkg.com/konva@2.4.2/konva.min.js"></script>
 
   <script src="js/jscolor.js"></script>
 
   <img id="pencil-cursor" src="img/pencil-cursor.png" style="display: none">
 </head>
+
 <body>
 
   <h1>Handimations</h1>
-
-  <!-- <div id="canvasDiv">
-    <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
-      <i class="fas fa-palette fa-3x"></i>
-    </button>
-  </div> -->
 
   <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
     <i class="fas fa-palette fa-3x"></i>
@@ -65,53 +61,64 @@
 
   <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
   <script>
-  var canvasElement = document.getElementById("displayArea");
-  var displayArea = canvasElement.getContext("2d");
-  var controller = new Leap.Controller();
+    var controller = new Leap.Controller();
 
-  var drawMode = false;
-  var eraseMode = false;
+    var stage = new Konva.Stage({
+      container: 'container',
+      width: "1200 px",
+      height: "600 px"
+    });
 
-  var curColor = "#b642f4";
-  var prevColor = curColor;
-  var clickX = new Array();
-  var clickY = new Array();
-  var clickDrag = new Array();
-  var clickColor = new Array();
-  var clickMode = "draw";
+    //Create layer, make a function to create multiple layers
+    var layer = new Konva.layer();
+    stage.add(layer);
 
-  var clickLines = new Array();
-  var curLine = -1;
-  addLine();
+    var canvasElement = document.getElementById("displayArea");
+    var displayArea = canvasElement.getContext("2d");
 
-  var pencilImg = document.getElementById("pencil-cursor");
+    var curColor = "#b642f4";
+    var prevColor = curColor;
+    var clickX = new Array();
+    var clickY = new Array();
+    var clickDrag = new Array();
+    var clickColor = new Array();
+    var clickMode = "draw";
 
-  //set color to value selected from color picker
-  function setStrokeColor(picker) {
-    curColor = "#" + picker.toString();
-  }
+    var drawMode = false;
+    var eraseMode = false;
 
-  function isControlFinger(controllerFingerIdx, frame) {
-    var isOnlyOneExtended = true;
-    for (j = 0; j < frame.pointables.length; j++) {
-      if (j != controllerFingerIdx) {
-        isOnlyOneExtended = !frame.pointables[j].extended;
-      }
+    displayArea.strokeStyle = curColor;
+    displayArea.lineJoin = "round";
+    displayArea.lineWidth = 5;
+
+    var pencilImg = document.getElementById("pencil-cursor");
+
+    //set color to value selected from color picker
+    function setStrokeColor(picker) {
+      curColor = "#" + picker.toString();
     }
-    return isOnlyOneExtended;
-  }
 
-  function addLine() {
-    var line = new Array();
-    line.push(clickX);
-    line.push(clickY);
-    line.push(clickColor);
-    line.push(clickMode);
-    clickLines.push(line);
-    curLine++;
-  }
+    function isControlFinger(controllerFingerIdx, frame) {
+      var isOnlyOneExtended = true;
+      for (j = 0; j < frame.pointables.length; j++) {
+        if (j != controllerFingerIdx) {
+          isOnlyOneExtended = !frame.pointables[j].extended;
+        }
+      }
+      return isOnlyOneExtended;
+    }
 
-  controller.on("frame", function(frame) {
+    function addLine() {
+      var line = new Array();
+      line.push(clickX);
+      line.push(clickY);
+      line.push(clickColor);
+      line.push(clickMode);
+      clickLines.push(line);
+      curLine++;
+    }
+
+    controller.on("frame", function(frame) {
     // Display Pointable (finger and tool) object data
     var pointableOutput = document.getElementById("pointableData");
     var pointableString = "";
@@ -152,32 +159,26 @@
     if (frame.pointables.length == 0) {
       drawMode = false;
       eraseMode = false;
-    }
-    else {
-        canvasElement.width = canvasElement.width; //clear
-        var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
-        //Get a pointable and normalize the tip position
-        //var pointable = frame.pointables[0];
-        //var drawMode = false;
+    } else {
+      canvasElement.width = canvasElement.width; //clear
+      var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
 
-        var controllerFinger = frame.pointables[0];
-        if (!drawMode && !eraseMode){ // Check if we need to toggle mode on
-          // Check if it's an index finger and it's the only one extended
-          // Alternatively, check if it's a pinky finger and it's the only oneextended
-          for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
-              drawMode = isControlFinger(i, frame);
-              if (drawMode) {
-                controllerFinger = frame.pointables[i];
-                clickX = new Array();
-                clickY = new Array();
-                clickColor = new Array();
-                clickMode = "draw";
-                document.getElementById("color").disabled = false;
-              }
+      var controllerFinger = frame.pointables[0];
+      if (!drawMode && !eraseMode){ // Check if we need to toggle mode on
+        // Check if it's an index finger and it's the only one extended
+        // Alternatively, check if it's a pinky finger and it's the only oneextended
+        for (i = 0; i < frame.pointables.length; i++) {
+          if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
+            drawMode = isControlFinger(i, frame);
+            if (drawMode) {
+              controllerFinger = frame.pointables[i];
+              clickX = new Array();
+              clickY = new Array();
+              clickColor = new Array();
+              clickMode = "draw";
+              document.getElementById("color").disabled = false;
             }
-            // Alternatively, check if it's a pinky finger and it's the only oneextended
-            else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
+          } else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
               eraseMode = isControlFinger(i, frame);
               if (eraseMode) {
                 controllerFinger = frame.pointables[i];
@@ -189,89 +190,78 @@
                 curColor = "#ffffff";
                 document.getElementById("color").disabled = true;
               }
-            }
           }
-        }
-        else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
-          for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
-              // Toggle out of drawMode
-              drawMode = false;
-              // Push to clickLines
-              addLine();
-              break;
-            }
-          }
-        }
-        else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
-          for (i = 0; i < frame.pointables.length; i++) {
-            if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
-              // Toggle out of eraseMode
-              eraseMode = false;
-              // Push to clickLines
-              addLine();
-              curColor = prevColor;
-              break;
-            }
-          }
-        }
-
-        var interactionBox = frame.interactionBox;
-        var normalizedPosition = interactionBox.normalizePoint(controllerFinger.stabilizedTipPosition, true);
-
-
-        // Convert the normalized coordinates to span the canvas
-        var canvasX = canvasElement.width * normalizedPosition[0];
-        var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
-        //we can ignore z for a 2D context
-
-        if (drawMode || eraseMode){
-          clickLines[curLine][0].push(canvasX);
-          clickLines[curLine][1].push(canvasY);
-          clickLines[curLine][2].push(curColor);
-          clickLines[curLine][3] = clickMode;
-        }
-        displayArea.lineJoiun = "round";
-
-        for (var i = 0; i < clickLines.length; i++) { //For every line segment
-          var line = clickLines[i];
-          var xPoints = line[0];
-          var yPoints = line[1];
-          var colorPoints = line[2];
-          if (line[3] == "draw") {
-            displayArea.lineWidth = 5;
-          }
-          else if (line[3] == "erase") {
-            displayArea.lineWidth = 10;
-          }
-          for (var j = 1; j < xPoints.length; j++) {//For every point on these lines
-            displayArea.beginPath();
-            displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
-
-            displayArea.lineTo(xPoints[j], yPoints[j]);
-            displayArea.closePath();
-            displayArea.strokeStyle = colorPoints[j];
-            displayArea.stroke();
-          }
-        }
-
-        displayArea.drawImage(pencilImg,canvasX,canvasY-25); //draw pencil cursor
-
-        /*
-        for (var i = 1; i < clickX.length; i++) {
-          displayArea.beginPath();
-          displayArea.moveTo(clickX[i-1], clickY[i-1]);
-
-          displayArea.lineTo(clickX[i], clickY[i]);
-          displayArea.closePath();
-          displayArea.strokeStyle = clickColor[i];
-          displayArea.stroke();
-        }
-        */
+       }
+    } else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
+       for (i = 0; i < frame.pointables.length; i++) {
+         if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
+           // Toggle out of drawMode
+           drawMode = false;
+           // Push to clickLines
+           addLine();
+           break;
+         }
+       }
+    } else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
+       for (i = 0; i < frame.pointables.length; i++) {
+         if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
+           // Toggle out of eraseMode
+           eraseMode = false;
+           // Push to clickLines
+           addLine();
+           curColor = prevColor;
+           break;
+         }
+      }
     }
+
+    var interactionBox = frame.interactionBox;
+    var normalizedPosition = interactionBox.normalizePoint(controllerFinger.stabilizedTipPosition, true);
+
+    // Convert the normalized coordinates to span the canvas
+    var canvasX = canvasElement.width * normalizedPosition[0];
+    var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+    //we can ignore z for a 2D context
+
+    if (drawMode || eraseMode){
+      clickLines[curLine][0].push(canvasX);
+      clickLines[curLine][1].push(canvasY);
+      clickLines[curLine][2].push(curColor);
+      clickLines[curLine][3] = clickMode;
+    }
+
+    for (var i = 0; i < clickLines.length; i++) { //For every line segment
+      var line = clickLines[i];
+      var xPoints = line[0];
+      var yPoints = line[1];
+      var colorPoints = line[2];
+
+      if (line[3] == "draw") {
+        displayArea.lineWidth = 5;
+      } else if (line[3] == "erase") {
+        displayArea.lineWidth = 10;
+      }
+
+      for (var j = 1; j < xPoints.length; j++) {//For every point on these lines
+        displayArea.beginPath();
+        displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
+
+        displayArea.lineTo(xPoints[j], yPoints[j]);
+        displayArea.closePath();
+        displayArea.strokeStyle = colorPoints[j];
+        displayArea.stroke();
+
+        layer.batchDraw();
+      }
+    }
+
+    displayArea.drawImage(pencilImg,canvasX,canvasY-25); //draw pencil cursor
+  }
+
   });
+
   controller.connect();
-  </script>
+</script>
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
