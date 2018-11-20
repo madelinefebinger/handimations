@@ -30,240 +30,144 @@
   </button>
 
   <script>
- function vectorToString(vector, digits) {
-   if (typeof digits === "undefined") {
-     digits = 1;
-   }
-   return "(" + vector[0].toFixed(digits) + ", "
-              + vector[1].toFixed(digits) + ", "
-              + vector[2].toFixed(digits) + ")";
- }
- function togglePause() {
-   paused = !paused;
-   if (paused) {
-     document.getElementById("pause").innerText = "Resume";
-   } else {
-     document.getElementById("pause").innerText = "Pause";
-   }
- }
- function pauseForGestures() {
-   if (document.getElementById("pauseOnGesture").checked) {
-     pauseOnGesture = true;
-   } else {
-     pauseOnGesture = false;
-   }
- }
- </script>
-
- <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
- <script>
- var canvasElement = document.getElementById("displayArea");
- var displayArea = canvasElement.getContext("2d");
- var controller = new Leap.Controller();
- var drawMode = false;
- var eraseMode = false;
- var curColor = "#b642f4";
- var prevColor = curColor;
- var clickX = new Array();
- var clickY = new Array();
- var clickDrag = new Array();
- var clickColor = new Array();
- var clickMode = "draw";
- var clickLines = new Array();
- var curLine = -1;
- addLine();
- var pencilImg = document.getElementById("pencil-cursor");
- //set color to value selected from color picker
- function setStrokeColor(picker) {
-   curColor = "#" + picker.toString();
- }
- function isControlFinger(controllerFingerIdx, frame) {
-   var isOnlyOneExtended = true;
-   for (j = 0; j < frame.pointables.length; j++) {
-     if (j != controllerFingerIdx) {
-       isOnlyOneExtended = !frame.pointables[j].extended;
-     }
-   }
-   return isOnlyOneExtended;
- }
- function addLine() {
-   var line = new Array();
-   line.push(clickX);
-   line.push(clickY);
-   line.push(clickColor);
-   line.push(clickMode);
-   clickLines.push(line);
-   curLine++;
- }
- controller.on("frame", function(frame) {
-   // Display Pointable (finger and tool) object data
-   var pointableOutput = document.getElementById("pointableData");
-   var pointableString = "";
-   if (frame.pointables.length > 0) {
-     var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
-     var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
-     for (var i = 0; i < frame.pointables.length; i++) {
-       var pointable = frame.pointables[i];
-       pointableString += "<div style='width:250px; float:left; padding:5px'>";
-       if (pointable.tool) {
-         pointableString += "Pointable ID: " + pointable.id + "<br />";
-         pointableString += "Classified as a tool <br />";
-         pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-         pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-         pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
-         pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
-         pointableString += "</div>";
+     function vectorToString(vector, digits) {
+       if (typeof digits === "undefined") {
+         digits = 1;
        }
-       else {
-         //pointableString += "Pointable ID: " + pointable.id + "<br />";
-         pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
-         //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
-         pointableString += "Classified as a finger<br />";
-         //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-         //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-         //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
-         pointableString += "Extended?: "  + pointable.extended + "<br />";
-         pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
-         pointableString += "</div>";
+       return "(" + vector[0].toFixed(digits) + ", "
+                  + vector[1].toFixed(digits) + ", "
+                  + vector[2].toFixed(digits) + ")";
+     }
+
+     function togglePause() {
+       paused = !paused;
+       if (paused) {
+         document.getElementById("pause").innerText = "Resume";
+       } else {
+         document.getElementById("pause").innerText = "Pause";
        }
      }
-   }
-   else {
-     pointableString += "<div>No pointables</div>";
-   }
-   pointableOutput.innerHTML = pointableString;
-   if (frame.pointables.length == 0) {
-     drawMode = false;
-     eraseMode = false;
-   }
-   else {
-       canvasElement.width = canvasElement.width; //clear
-       var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
-       //Get a pointable and normalize the tip position
-       //var pointable = frame.pointables[0];
-       //var drawMode = false;
-       var controllerFinger = frame.pointables[0];
-       if (!drawMode && !eraseMode){ // Check if we need to toggle mode on
-         // Check if it's an index finger and it's the only one extended
-         // Alternatively, check if it's a pinky finger and it's the only oneextended
-         for (i = 0; i < frame.pointables.length; i++) {
-           if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
-             drawMode = isControlFinger(i, frame);
-             if (drawMode) {
-               controllerFinger = frame.pointables[i];
-               clickX = new Array();
-               clickY = new Array();
-               clickColor = new Array();
-               clickMode = "draw";
-               document.getElementById("color").disabled = false;
-             }
-           }
-           // Alternatively, check if it's a pinky finger and it's the only oneextended
-           else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
-             eraseMode = isControlFinger(i, frame);
-             if (eraseMode) {
-               controllerFinger = frame.pointables[i];
-               clickX = new Array();
-               clickY = new Array();
-               clickColor = new Array();
-               clickMode = "erase";
-               prevColor = curColor;
-               curColor = "#ffffff";
-               document.getElementById("color").disabled = true;
-             }
-           }
-         }
+
+     function pauseForGestures() {
+       if (document.getElementById("pauseOnGesture").checked) {
+         pauseOnGesture = true;
+       } else {
+         pauseOnGesture = false;
        }
-       else if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
-         for (i = 0; i < frame.pointables.length; i++) {
-           if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
-             // Toggle out of drawMode
-             drawMode = false;
-             // Push to clickLines
-             addLine();
-             break;
-           }
-         }
-       }
-       else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
-         for (i = 0; i < frame.pointables.length; i++) {
-           if ( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && ( (!frame.pointables[i].extended) || !isControlFinger(i, frame) ) ) {
-             // Toggle out of eraseMode
-             eraseMode = false;
-             // Push to clickLines
-             addLine();
-             curColor = prevColor;
-             break;
-           }
-         }
-       }
-       var interactionBox = frame.interactionBox;
-       var normalizedPosition = interactionBox.normalizePoint(controllerFinger.stabilizedTipPosition, true);
-       // Convert the normalized coordinates to span the canvas
-       var canvasX = canvasElement.width * normalizedPosition[0];
-       var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
-       //we can ignore z for a 2D context
-       if (drawMode || eraseMode){
-         clickLines[curLine][0].push(canvasX);
-         clickLines[curLine][1].push(canvasY);
-         clickLines[curLine][2].push(curColor);
-         clickLines[curLine][3] = clickMode;
-       }
-       displayArea.lineJoiun = "round";
-       for (var i = 0; i < clickLines.length; i++) { //For every line segment
-         var line = clickLines[i];
-         var xPoints = line[0];
-         var yPoints = line[1];
-         var colorPoints = line[2];
-         if (line[3] == "draw") {
-           displayArea.lineWidth = 5;
-         }
-         else if (line[3] == "erase") {
-           displayArea.lineWidth = 10;
-         }
-         for (var j = 1; j < xPoints.length; j++) {//For every point on these lines
-           displayArea.beginPath();
-           displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
-           displayArea.lineTo(xPoints[j], yPoints[j]);
-           displayArea.closePath();
-           displayArea.strokeStyle = colorPoints[j];
-           displayArea.stroke();
-         }
-       }
-       displayArea.drawImage(pencilImg,canvasX,canvasY-25); //draw pencil cursor
+     }
+  </script>
 
-       var stage = new Konva.Stage({
-          container: 'displayArea',
-          width: displayArea.width,
-          height: displayArea.height
-        });
+  <div id="container"></div>
 
-        var layer = new Konva.Layer();
-        stage.add(layer);
+  <script>
+    var width = window.innerWidth;
+    var height = window.innerHeight - 25;
 
-        var image = new Konva.Image({
-          image: displayArea
-        });
-        layer.add(image);
-        //stage.draw();
+    function setStrokeColor(picker) {
+      curColor = "#" + picker.toString();
+    }
 
-   }
- });
- controller.connect();
- </script>
+    // first we need Konva core things: stage and layer
+    var stage = new Konva.Stage({
+      container: 'container',
+      width: width,
+      height: height
+    });
 
- <script src="js/plugins.js"></script>
- <script src="js/main.js"></script>
+    var layer = new Konva.Layer();
+    stage.add(layer);
 
- <div id="main">
-   <!-- <h1>Leap Motion Data</h1> -->
-   <button id="pause" onclick="togglePause()">Pause</button>
-   <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
-   <div style="clear:both;"></div>
-   <h3>Finger and tool data:</h3>
-   <div id="pointableData"></div>
-   <div style="clear:both;"></div>
- </div>
+    // Create LeapMotion controller, and related objects
+    var controller = new Leap.Controller();
+    //var interactionBox = frame.interactionBox;
+
+    var curColor = "#000000";
+
+    // then we are going to draw into special canvas element
+    var canvas = document.createElement('canvas');
+    canvas.width = stage.width()/2;
+    canvas.height = stage.height()/2;
+
+    // created canvas we can add to layer as "Konva.Image" element
+    var image = new Konva.Image({
+      image: canvas,
+      x: stage.width()/10,
+      y: stage.height()/10,
+      stroke: 'blue',
+      shadowBlur: 5
+    });
+    layer.add(image);
+    stage.draw();
+
+    //get access to context element
+    var context = canvas.getContext('2d');
+    context.strokeStyle = curColor;
+    context.lineJoin = "round";
+    context.lineWidth = 5;
+
+    var isPaint = false;
+    var lastPointerPosition;
+    var mode = 'brush';
+
+    // now we need to bind some events
+    // we need to start drawing on mousedown
+    // and stop drawing on mouseup
+    image.on('mousedown touchstart', function () {
+      isPaint = true;
+      lastPointerPosition = stage.getPointerPosition();
+
+    });
+
+    // will it be better to listen move/end events on the window?
+
+    stage.addEventListener('mouseup touchend', function () {
+      isPaint = false;
+    });
+
+    // and core function - drawing
+    stage.addEventListener('mousemove touchmove', function () {
+      if (!isPaint) {
+        return;
+      }
+
+      if (mode === 'brush') {
+        context.globalCompositeOperation = 'source-over';
+      }
+      if (mode === 'eraser') {
+        context.globalCompositeOperation = 'destination-out';
+      }
+      context.beginPath();
+
+      var localPos = {
+        x: lastPointerPosition.x - image.x(),
+        y: lastPointerPosition.y - image.y()
+      };
+      context.moveTo(localPos.x, localPos.y);
+      var pos = stage.getPointerPosition();
+      localPos = {
+        x: pos.x - image.x(),
+        y: pos.y - image.y()
+      };
+      context.lineTo(localPos.x, localPos.y);
+      context.closePath();
+      context.strokeStyle = curColor;
+      context.stroke();
+
+      lastPointerPosition = pos;
+      layer.batchDraw();
+    });
+
+  </script>
+
+  <script src="js/plugins.js"></script>
+  <script src="js/main.js"></script>
+
+  <div id="main">
+     <h3>Finger and tool data:</h3>
+     <div id="pointableData"></div>
+     <div style="clear:both;"></div>
+  </div>
+
 
 </body>
 </html>
