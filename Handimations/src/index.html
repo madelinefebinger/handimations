@@ -55,17 +55,19 @@
          pauseOnGesture = false;
        }
      }
+
+     //set color from color picker
+     function setStrokeColor(picker) {
+       curColor = "#" + picker.toString();
+     }
   </script>
 
   <div id="container"></div>
 
   <script>
+    //set up width and height on canvas
     var width = window.innerWidth;
     var height = window.innerHeight - 25;
-
-    function setStrokeColor(picker) {
-      curColor = "#" + picker.toString();
-    }
 
     // first we need Konva core things: stage and layer
     var stage = new Konva.Stage({
@@ -79,7 +81,6 @@
 
     // Create LeapMotion controller, and related objects
     var controller = new Leap.Controller();
-    //var interactionBox = frame.interactionBox;
 
     var curColor = "#000000";
 
