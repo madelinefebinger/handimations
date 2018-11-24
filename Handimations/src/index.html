@@ -60,6 +60,7 @@
      function setStrokeColor(picker) {
        curColor = "#" + picker.toString();
      }
+
   </script>
 
   <div id="container"></div>
@@ -68,6 +69,8 @@
     //set up width and height on canvas
     var width = window.innerWidth;
     var height = window.innerHeight - 25;
+    var curColor = "#000000";
+    var pencilImg = document.getElementById("pencil-cursor");
 
     // first we need Konva core things: stage and layer
     var stage = new Konva.Stage({
@@ -79,17 +82,13 @@
     var layer = new Konva.Layer();
     stage.add(layer);
 
-    // Create LeapMotion controller, and related objects
-    var controller = new Leap.Controller();
-
-    var curColor = "#000000";
-
     // then we are going to draw into special canvas element
     var canvas = document.createElement('canvas');
+    var layer_list = [];
     canvas.width = stage.width()/2;
     canvas.height = stage.height()/2;
 
-    // created canvas we can add to layer as "Konva.Image" element
+    // created canvas, we can add to layer as "Konva.Image" element
     var image = new Konva.Image({
       image: canvas,
       x: stage.width()/10,
@@ -106,58 +105,113 @@
     context.lineJoin = "round";
     context.lineWidth = 5;
 
-    var isPaint = false;
-    var lastPointerPosition;
-    var mode = 'brush';
+    var swipeMotion = false;
+    var extendedFingers = 0;
 
-    // now we need to bind some events
-    // we need to start drawing on mousedown
-    // and stop drawing on mouseup
-    image.on('mousedown touchstart', function () {
-      isPaint = true;
-      lastPointerPosition = stage.getPointerPosition();
-
-    });
-
-    // will it be better to listen move/end events on the window?
-
-    stage.addEventListener('mouseup touchend', function () {
-      isPaint = false;
-    });
-
-    // and core function - drawing
-    stage.addEventListener('mousemove touchmove', function () {
-      if (!isPaint) {
-        return;
+    // Create LeapMotion controller, and related objects
+    var controller = Leap.loop({enableGestures: true}, function(frame){
+      //The amount of fingers is not 5 (swipe motion) but there are fingers held out
+      //Check how many fingers are extended
+      if(frame.hands.length == 1){
+        //One hand is held out over LeapMotion
+        var hand = frame.hands[0];
+        for(var f = 0; f < hand.fingers.length; f++){
+          var finger = hand.fingers[f];
+          if(finger.extended) extendedFingers++;
+        }
       }
 
-      if (mode === 'brush') {
-        context.globalCompositeOperation = 'source-over';
+      //Debug: Prints how many fingers are extended
+      console.log(extendedFingers);
+
+      //Depending on how many fingers are extended, execute drawing or new layer creation
+      if (extendedFingers > 0) {
+        console.log("!!!");
+
+        if (extendedFingers == 5) {
+            //If 5 - swipe for new layer
+            //All fingers are held out - so check if it is a swipe gesture
+            if(frame.valid && frame.gestures.length > 0){
+              frame.gestures.forEach(function(gesture){
+                  switch (gesture.type){
+                    case "swipe":
+                        //Check if all five fingers are used for swipe and direction is moving right
+                        //If 5, create a new layer
+                        if(gesture.pointableIds > 5 && gesture.direction[0] > 0 && swipeMotion == false){
+                          image = new Konva.Image({
+                            image: canvas,
+                            x: stage.width()/10,
+                            y: stage.height()/10
+                          });
+                          layer.add(image);
+                          stage.draw();
+                          console.log("New layer");
+                          swipeMotion = true;
+                        }
+
+                        var isPaint = false;
+                        var lastPointerPosition;
+                        var mode = 'brush';
+
+                        // now we need to bind some events
+                        // we need to start drawing on mousedown
+                        // and stop drawing on mouseup
+                        image.on('mousedown touchstart', function () {
+                          isPaint = true;
+                          lastPointerPosition = stage.getPointerPosition();
+
+                        });
+
+                        // will it be better to listen move/end events on the window?
+
+                        stage.addEventListener('mouseup touchend', function () {
+                          isPaint = false;
+                        });
+
+                        // and core function - drawing
+                        stage.addEventListener('mousemove touchmove', function () {
+                          if (!isPaint) {
+                            return;
+                          }
+
+                          if (mode === 'brush') {
+                            context.globalCompositeOperation = 'source-over';
+                          }
+                          if (mode === 'eraser') {
+                            context.globalCompositeOperation = 'destination-out';
+                          }
+                          context.beginPath();
+
+                          var localPos = {
+                            x: lastPointerPosition.x - image.x(),
+                            y: lastPointerPosition.y - image.y()
+                          };
+                          context.moveTo(localPos.x, localPos.y);
+                          var pos = stage.getPointerPosition();
+                          localPos = {
+                            x: pos.x - image.x(),
+                            y: pos.y - image.y()
+                          };
+                          context.lineTo(localPos.x, localPos.y);
+                          context.closePath();
+                          context.strokeStyle = curColor;
+                          context.stroke();
+
+                          lastPointerPosition = pos;
+                          layer.batchDraw();
+                        });
+
+                        break;
+                  }
+              });
+            }
+        } else if (extendedFingers <= 4){
+            //If 1-4 fingers - drawing
+        }
       }
-      if (mode === 'eraser') {
-        context.globalCompositeOperation = 'destination-out';
-      }
-      context.beginPath();
 
-      var localPos = {
-        x: lastPointerPosition.x - image.x(),
-        y: lastPointerPosition.y - image.y()
-      };
-      context.moveTo(localPos.x, localPos.y);
-      var pos = stage.getPointerPosition();
-      localPos = {
-        x: pos.x - image.x(),
-        y: pos.y - image.y()
-      };
-      context.lineTo(localPos.x, localPos.y);
-      context.closePath();
-      context.strokeStyle = curColor;
-      context.stroke();
-
-      lastPointerPosition = pos;
-      layer.batchDraw();
-    });
-
+      extendedFingers = 0;
+   });
   </script>
 
   <script src="js/plugins.js"></script>
