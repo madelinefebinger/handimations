@@ -30,9 +30,9 @@ h1{
   */
 }
 
-#canvasDiv{
+/*#canvasDiv{
   display: inline-block;
-}
+}*/
 #canvas{
   border: 2px solid blue;
 }
