@@ -37,9 +37,9 @@ h1{
   border: 2px solid blue;
 }
 
-#color, #mouseptr{
+#color, #play{
   border-radius: 5px;
-  background-color: #4CAF50; /* Green */
+  /*background-color: #4CAF50; /* Green */
   padding: 15px 32px;
   text-align: center;
   text-decoration: none;

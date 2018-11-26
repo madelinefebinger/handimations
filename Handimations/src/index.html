@@ -27,6 +27,8 @@
     <i class="fas fa-palette fa-3x"></i>
   </button>
 
+  <button id="play" <i class="fas fa-play" style="font-size:48px;"></i></button>
+
   <script>
      //set color from color picker
      function setStrokeColor(picker) {
@@ -68,7 +70,7 @@
       x: stage.width()/10,
       y: stage.height()/10,
       stroke: 'blue',
-      shadowBlur: 5
+      //shadowBlur: 5
     });
     layer_list[ly].add(image);
     stage.draw();
@@ -89,6 +91,7 @@
     var clickColor = new Array();
     var clickMode = "draw";
     var prevColor = curColor;
+    var leave_off = false;
 
     //Set start x and y coordinate history
     //Plot on image layer
@@ -145,6 +148,7 @@
                           console.log("New layer");
 
                           swipeMotion = true;
+                          leave_off = true;
                         }
 
                         var isPaint = false;
@@ -181,7 +185,7 @@
               clickMode = "erase";
               context.lineWidth = 10;
               prevColor = curColor;
-              curColor = "ffffff";
+              curColor = "#ffffff";
               document.getElementById("color").disabled = true;
 
             }
@@ -190,10 +194,6 @@
               // Convert the normalized coordinates to span the canvas
               var canvasX = canvas.width * normalizedPosition[0];
               var canvasY = canvas.height * (1 - normalizedPosition[1]);
-
-              //Set Konva image start point since the layer is dependent on a cursor
-              // clickLines[curLine][0].push(image.x());
-              // clickLines[curLine][1].push(image.y());
 
               //Add the coordinates to the history
               clickX.push(Math.floor(canvasX));
@@ -212,19 +212,23 @@
               if(inx == 1){
                 //Draw a transparent line from the start of the image point
                 context.strokeStyle = 'rgb(255,0, 0, 0)';
+              } else if (leave_off == true){
+                //Draw a transparent line if there is an interruption
+                context.strokeStyle = 'rgb(255,0, 0, 0)';
               } else{
                 //Otherwise, draw a normal line
                 context.strokeStyle = clickColor[inx];
               }
 
               context.stroke();
-
               layer_list[ly].batchDraw();
 
               //Set the current color to the previous color used now that erasing is done
               if(pinkyFinger.extended){
                 curColor = prevColor;
               }
+
+              leave_off = false;
 
             }
         } else {
@@ -236,6 +240,7 @@
             var isPaint = false;
             var lastPointerPosition;
             var mode = 'brush';
+            leave_off = true;
 
             image.on('mousedown touchstart', function () {
               isPaint = true;
