@@ -20,19 +20,43 @@
 
   <img id="pencil-cursor" src="img/pencil-cursor.png" style="display: none">
 </head>
+
 <body>
+  <div class="topBar">
+    <h1>Handimations</h1>
+  </div>
 
-  <h1>Handimations</h1>
+  <div class="toolbar">
+    <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
+      <i class="fas fa-palette fa-2x"></i>
+    </button>
 
-  <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
-    <i class="fas fa-palette fa-3x"></i>
-  </button>
+    <div class="mode-toolbar">
+      <input type="radio" id="draw" name="mode" value="draw" checked>
+      <label for="draw"><i class="fas fa-pencil-alt fa-2x"></i></label>
 
+      <input type="radio" id="erase" name="mode" value="erase">
+      <label for="erase"><i class="fas fa-eraser fa-2x"></i></label>
+    </div>
+
+    <button id="new-layer">
+      <svg width="100%" height="100%" viewBox="0 0 181 174" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+        <path d="M55.544,107.47l-50.544,22.427l85.758,38.139l84.989,-39.349l-49.025,-22.927" style="fill:none;stroke:#000;stroke-width:10px;" />
+        <path d="M143.01,5l0,56.774" style="fill:none;stroke:#000;stroke-width:10px;" />
+        <path d="M171.397,31.783l-56.774,0" style="fill:none;stroke:#000;stroke-width:10px;" />
+        <path d="M83.939,48.966l-76.181,33.81l82.668,38.336l83.332,-35.386" style="fill:none;stroke:#000;stroke-width:10px;" />
+      </svg>
+    </button>
+
+    <button id="export"><i class="fas fa-file-export fa-2x"></i></button>
+
+
+  </div>
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
 
   <script>
-  function vectorToString(vector, digits) {
+    function vectorToString(vector, digits) {
     if (typeof digits === "undefined") {
       digits = 1;
     }
@@ -59,13 +83,15 @@
 
   <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
   <script>
-  //Globals
+    //Globals
   var canvasElement = document.getElementById("displayArea");
   var displayArea = canvasElement.getContext("2d");
   var controller = new Leap.Controller();
 
   var drawMode = false;
   var eraseMode = false;
+  // drawModeActive = document.getElementById("draw");
+  // eraseModeActive = document.getElementById("draw");
 
   var curColor = "#b642f4";
   var prevColor = curColor;
@@ -269,6 +295,8 @@
                 clickColor = new Array();
                 clickMode = "draw";
                 document.getElementById("color").disabled = false;
+                document.getElementById("draw").checked = true;
+                document.getElementById("erase").checked = false;
               }
             }
             // Alternatively, check if it's a pinky finger and it's the only one extended
@@ -283,6 +311,8 @@
                 prevColor = curColor;
                 curColor = "#ffffff";
                 document.getElementById("color").disabled = true;
+                document.getElementById("draw").checked = false;
+                document.getElementById("erase").checked = true;
               }
             }
           }
