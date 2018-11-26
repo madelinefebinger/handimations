@@ -88,6 +88,11 @@ button{
 
 #export{
   padding:25px;
+  margin-right: 25px;
+}
+
+#trash{
+  padding:25px;
 }
 
 /*
