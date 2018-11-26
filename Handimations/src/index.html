@@ -253,10 +253,11 @@
   });
 
   function trashit(){
-    window.alert("ahhhhh its too late");
-    reset();
-    redraw(0,0);
-
+    var check = window.confirm("Clear Layer?");
+    if(check){
+      reset();
+      redraw(0,0);
+    }
   }
   //Leap Motion Mode
   controller.on("frame", function(frame) {
