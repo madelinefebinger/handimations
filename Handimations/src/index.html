@@ -205,7 +205,15 @@
               context.moveTo(clickX[inx-1], clickY[inx-1]);
               context.lineTo(clickX[inx], clickY[inx]);
               context.closePath();
-              context.strokeStyle = clickColor[inx];
+
+              //Draw a transparent line from the start of the image point
+              if(inx == 1){
+                context.strokeStyle = 'rgb(255,0, 0, 0)';
+              } else{
+                //Otherwise, draw a normal line
+                context.strokeStyle = clickColor[inx];
+              }
+
               context.stroke();
 
               layer_list[ly].batchDraw();
