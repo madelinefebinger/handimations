@@ -201,13 +201,16 @@
               clickColor.push(curColor);
               inx++;
 
+              //Draw the line using the given coordinates
               context.beginPath();
               context.moveTo(clickX[inx-1], clickY[inx-1]);
               context.lineTo(clickX[inx], clickY[inx]);
               context.closePath();
 
-              //Draw a transparent line from the start of the image point
+              //To handle the issues with Konva's image object
+              //Need to start from image.x() and image.y() and then plot points, relatively
               if(inx == 1){
+                //Draw a transparent line from the start of the image point
                 context.strokeStyle = 'rgb(255,0, 0, 0)';
               } else{
                 //Otherwise, draw a normal line
