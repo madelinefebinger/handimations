@@ -142,6 +142,7 @@
                           layer_list[ly] = new Konva.Layer();
                           layer_list[ly].add(image);
                           stage.add(layer_list[ly]);
+                          layer_list[ly-1].alpha(0.1);
                           stage.draw();
 
                           //Debug
