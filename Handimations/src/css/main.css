@@ -37,14 +37,57 @@ h1{
   border: 2px solid blue;
 }
 
-#color, #play{
+#color{
   border-radius: 5px;
-  /*background-color: #4CAF50; /* Green */
-  padding: 15px 32px;
+  background-color: #4CAF50; /* Green */
+  padding: 20px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
+  float: left;
+  margin-right: 25px;
+
+}
+
+.toolbar{
+  margin-bottom: 120px;
+}
+.mode-toolbar input[type="radio"] {
+  display: none;
+}
+
+.mode-toolbar label{
+  display: inline-block;
+  background: #ddd;
+  padding: 20px;
+
+}
+.mode-toolbar input[type="radio"]:checked+label {
+  background-color: #009999;
+  color:white;
+}
+button{
+  display: inline-block;
+  float: left;
+}
+#new-layer svg{
+  width:30px;
+  height: 30px;
+  padding: 20px;
+}
+.mode-toolbar{
+  display: inline-block;
+  float: left;
+  margin-right: 25px;
+}
+
+#new-layer{
+  margin-right: 25px;
+}
+
+#export{
+  padding:25px;
 }
 
 /*
