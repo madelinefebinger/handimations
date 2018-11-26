@@ -212,7 +212,7 @@
               if(inx == 1){
                 //Draw a transparent line from the start of the image point
                 context.strokeStyle = 'rgb(255,0, 0, 0)';
-              } else if (leave_off == true){
+              } else if (leave_off == true || clickX[inx]-clickX[inx-1] > 150 || clickY[inx]-clickY[inx-1] > 150){
                 //Draw a transparent line if there is an interruption
                 context.strokeStyle = 'rgb(255,0, 0, 0)';
               } else{
