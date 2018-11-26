@@ -24,12 +24,6 @@
 
   <h1>Handimations</h1>
 
-  <!-- <div id="canvasDiv">
-    <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
-      <i class="fas fa-palette fa-3x"></i>
-    </button>
-  </div> -->
-
   <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
     <i class="fas fa-palette fa-3x"></i>
   </button>
@@ -65,6 +59,7 @@
 
   <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #0000ff;"></canvas>
   <script>
+  //Globals
   var canvasElement = document.getElementById("displayArea");
   var displayArea = canvasElement.getContext("2d");
   var controller = new Leap.Controller();
@@ -86,11 +81,50 @@
 
   var pencilImg = document.getElementById("pencil-cursor");
 
-  //set color to value selected from color picker
+  var curColor = '#123321';
+  var clickColor = new Array();
+
+  //Add new point data to current line
+  function addPoint(canvasX, canvasY) {
+    clickLines[curLine][0].push(canvasX);
+    clickLines[curLine][1].push(canvasY);
+    clickLines[curLine][2].push(curColor);
+    clickLines[curLine][3] = clickMode;
+  }
+
+  //Display paths drawn
+  function redraw(canvasX, canvasY) {
+    displayArea.lineJoiun = "round";
+
+    for (var i = 0; i < clickLines.length; i++) { //For every line segment
+      var line = clickLines[i];
+      var xPoints = line[0];
+      var yPoints = line[1];
+      var colorPoints = line[2];
+      if (line[3] == "draw") {
+        displayArea.lineWidth = 5;
+      }
+      else if (line[3] == "erase") {
+        displayArea.lineWidth = 10;
+      }
+      for (var j = 1; j < xPoints.length; j++) {//For every point on these lines
+        displayArea.beginPath();
+        displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
+
+        displayArea.lineTo(xPoints[j], yPoints[j]);
+        displayArea.closePath();
+        displayArea.strokeStyle = colorPoints[j];
+        displayArea.stroke();
+      }
+    }
+  }
+
+  //Set color to value selected from color picker
   function setStrokeColor(picker) {
     curColor = "#" + picker.toString();
   }
 
+  //Check whether a single finger is extended
   function isControlFinger(controllerFingerIdx, frame) {
     var isOnlyOneExtended = true;
     for (j = 0; j < frame.pointables.length; j++) {
@@ -101,6 +135,7 @@
     return isOnlyOneExtended;
   }
 
+  //Add completed line to array of lines to be displayed
   function addLine() {
     var line = new Array();
     line.push(clickX);
@@ -111,6 +146,67 @@
     curLine++;
   }
 
+  //Mouse Mode
+  //Start new line
+  $("#displayArea").mousedown(function(e) {
+    mouseX = e.pageX - this.offsetLeft;
+    mouseY = e.pageY - this.offsetTop;
+    drawMode = clickMode == "draw";
+    eraseMode = !drawMode;
+    clickX = new Array();
+    clickY = new Array();
+    clickColor = new Array();
+    document.getElementById("color").disabled = eraseMode;
+    console.log(clickMode);
+    addPoint(mouseX, mouseY);
+    redraw(mouseX, mouseY);
+  });
+
+  //Toggle modes
+  $("#displayArea").dblclick(function(e) {
+    if (clickMode == "draw") {
+      clickMode = "erase";
+      prevColor = curColor;
+      curColor = "#ffffff";
+    }
+    else {
+      clickMode = "draw";
+      curColor = prevColor;
+    }
+    console.log(clickMode);
+  });
+
+  //Plot line
+  $("#displayArea").mousemove(function(e) {
+    mouseX = e.pageX - this.offsetLeft;
+    mouseY = e.pageY - this.offsetTop;
+    if (drawMode || eraseMode) {
+      addPoint(mouseX, mouseY);
+      redraw(mouseX, mouseY);
+    }
+  });
+
+  //End line
+  $("#displayArea").mouseup(function(e) {
+    drawMode = false;
+    eraseMode = false;
+    mouseX = e.pageX - this.offsetLeft;
+    mouseY = e.pageY - this.offsetTop;
+    addLine();
+    redraw(mouseX, mouseY);
+  });
+
+  //End line
+  $("#displayArea").mouseleave(function(e) {
+    drawMode = false;
+    eraseMode = false;
+    mouseX = e.pageX - this.offsetLeft;
+    mouseY = e.pageY - this.offsetTop;
+    addLine();
+    redraw(mouseX, mouseY);
+  });
+
+  //Leap Motion Mode
   controller.on("frame", function(frame) {
     // Display Pointable (finger and tool) object data
     var pointableOutput = document.getElementById("pointableData");
@@ -163,7 +259,6 @@
         var controllerFinger = frame.pointables[0];
         if (!drawMode && !eraseMode){ // Check if we need to toggle mode on
           // Check if it's an index finger and it's the only one extended
-          // Alternatively, check if it's a pinky finger and it's the only oneextended
           for (i = 0; i < frame.pointables.length; i++) {
             if ( (fingerTypeMap[frame.pointables[i].type] == "Index finger") && (frame.pointables[i].extended) ) {
               drawMode = isControlFinger(i, frame);
@@ -176,7 +271,7 @@
                 document.getElementById("color").disabled = false;
               }
             }
-            // Alternatively, check if it's a pinky finger and it's the only oneextended
+            // Alternatively, check if it's a pinky finger and it's the only one extended
             else if( (fingerTypeMap[frame.pointables[i].type] == "Pinky finger") && (frame.pointables[i].extended) ) {
               eraseMode = isControlFinger(i, frame);
               if (eraseMode) {
@@ -219,55 +314,16 @@
         var interactionBox = frame.interactionBox;
         var normalizedPosition = interactionBox.normalizePoint(controllerFinger.stabilizedTipPosition, true);
 
-
         // Convert the normalized coordinates to span the canvas
         var canvasX = canvasElement.width * normalizedPosition[0];
         var canvasY = canvasElement.height * (1 - normalizedPosition[1]);
-        //we can ignore z for a 2D context
+        //We can ignore z for a 2D context
 
         if (drawMode || eraseMode){
-          clickLines[curLine][0].push(canvasX);
-          clickLines[curLine][1].push(canvasY);
-          clickLines[curLine][2].push(curColor);
-          clickLines[curLine][3] = clickMode;
+          addPoint(canvasX, canvasY);
         }
-        displayArea.lineJoiun = "round";
-
-        for (var i = 0; i < clickLines.length; i++) { //For every line segment
-          var line = clickLines[i];
-          var xPoints = line[0];
-          var yPoints = line[1];
-          var colorPoints = line[2];
-          if (line[3] == "draw") {
-            displayArea.lineWidth = 5;
-          }
-          else if (line[3] == "erase") {
-            displayArea.lineWidth = 10;
-          }
-          for (var j = 1; j < xPoints.length; j++) {//For every point on these lines
-            displayArea.beginPath();
-            displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
-
-            displayArea.lineTo(xPoints[j], yPoints[j]);
-            displayArea.closePath();
-            displayArea.strokeStyle = colorPoints[j];
-            displayArea.stroke();
-          }
-        }
-
-        displayArea.drawImage(pencilImg,canvasX,canvasY-25); //draw pencil cursor
-
-        /*
-        for (var i = 1; i < clickX.length; i++) {
-          displayArea.beginPath();
-          displayArea.moveTo(clickX[i-1], clickY[i-1]);
-
-          displayArea.lineTo(clickX[i], clickY[i]);
-          displayArea.closePath();
-          displayArea.strokeStyle = clickColor[i];
-          displayArea.stroke();
-        }
-        */
+        redraw();
+        displayArea.drawImage(pencilImg,canvasX,canvasY-25); //Draw pencil cursor
     }
   });
   controller.connect();
