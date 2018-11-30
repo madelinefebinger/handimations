@@ -289,6 +289,7 @@
         let indexFinger = hand.indexFinger;
         let pinkyFinger = hand.pinky;
         let interactionBox = frame.interactionBox;
+        let normalizedPosition = undefined;
         if (indexFinger.extended) {
           if (!drawMode) {
             drawMode = true;
@@ -301,7 +302,7 @@
             document.getElementById("draw").checked = true;
             document.getElementById("erase").checked = false;
           }
-          let normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
+          normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
         }
         else if (pinkyFinger.extended) {
           if (!eraseMode) {
@@ -317,7 +318,7 @@
             document.getElementById("draw").checked = false;
             document.getElementById("erase").checked = true;
           }
-          let normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
+          normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
         }
 
         if (drawMode || eraseMode){
