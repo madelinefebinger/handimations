@@ -55,9 +55,6 @@ Add additional notes about how to deploy this on a live system
 * [LeapJS](https://developer-archive.leapmotion.com/documentation/javascript/index.html) - LeapMotion Javascript SDK
 * [Atom](https://atom.io/) - IDE for teletyping
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
