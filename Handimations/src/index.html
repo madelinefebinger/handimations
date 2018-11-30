@@ -268,13 +268,9 @@
   //Check if the LeapMotion is connected
 
   let controller = Leap.loop({enableGestures: true}, function(frame) {
-      //check connection
-      if (controller.isConnected()){
-        console.log("connected");
-      } else {
-        console.log("disconnected");
+      if(controller.connected){
+        console.log("Connected");
       }
-
       var pointableOutput = document.getElementById("pointableData");
       var pointableString = "";
       if (frame.pointables.length > 0) {
