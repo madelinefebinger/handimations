@@ -269,7 +269,7 @@
 
   let controller = Leap.loop({enableGestures: true}, function(frame) {
       //check connection
-      if (controller.isConnected()){
+      if (controller.connected()){
         console.log("connected");
       } else {
         console.log("disconnected");
