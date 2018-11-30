@@ -274,7 +274,6 @@
       } else {
         console.log("disconnected");
       }
-
       var pointableOutput = document.getElementById("pointableData");
       var pointableString = "";
       if (frame.pointables.length > 0) {
@@ -412,6 +411,7 @@
         }
       }
       redraw();
+      swipeMotion = false;
     });
 
   </script>
