@@ -269,7 +269,7 @@
   //Check if the LeapMotion is connected
 
     controller = Leap.loop({enableGestures: true}, function(frame) {
-      let checkConnection = controller.isConnected();
+      //let checkConnection = controller.isConnected();
 
       var pointableOutput = document.getElementById("pointableData");
       var pointableString = "";
@@ -400,7 +400,7 @@
       }
       redraw();
     });
-  
+
   </script>
 
   <script src="js/plugins.js"></script>
