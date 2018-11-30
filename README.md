@@ -1,6 +1,6 @@
 # Handimations
 
-Handimations is a drawing software that utilizes the LeapMotion hand sensor to allow users to draw their own flipbook gifs. No sticky-notes or pencil needed! 
+Handimations is a drawing software that utilizes the LeapMotion hand sensor to allow users to draw their own flipbook gifs. No sticky-notes or art supplies needed! 
 
 ## Authors
 
