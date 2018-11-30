@@ -4,13 +4,13 @@ Handimations is a drawing software that utilizes the LeapMotion hand sensor to a
 
 ## Authors
 
-* **Maddie Febinger** - *Initial work*
+* **Maddie Febinger** - *febingm1@tcnj.edu*
 
-* **Victoria Green** - *Initial work*
+* **Victoria Green** - *greenv2@tcnj.edu*
 
-* **Emily Kazenmayer** - *Initial work*
+* **Emily Kazenmayer** - *kazenme1@tcnj.edu*
 
-* **Ananya Srinivasan** - *Initial work*
+* **Ananya Srinivasan** - *sriniva5@tcnj.edu*
 
 ## Getting Started
 
