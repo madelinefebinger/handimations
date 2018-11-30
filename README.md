@@ -50,6 +50,11 @@ Explain how to run the automated tests for this system
 
 Add additional notes about how to deploy this on a live system
 
+## Functions
+
+Explaining the functions
+
+
 ## Built With
 
 * [LeapJS](https://developer-archive.leapmotion.com/documentation/javascript/index.html) - LeapMotion Javascript SDK
