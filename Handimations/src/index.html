@@ -321,7 +321,7 @@
           normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
         }
 
-        if (drawMode || eraseMode){
+        if ((drawMode || eraseMode) && normalizedPosition !== undefined){
           // Convert the normalized coordinates to span the canvas
           let canvasX = canvasElement.width * normalizedPosition[0];
           let canvasY = canvasElement.height * (1 - normalizedPosition[1]);
