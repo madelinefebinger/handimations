@@ -18,6 +18,10 @@
 
   <script src="js/jscolor.js"></script>
 
+  <!-- Scripts for gif.js library -->
+  <script src="gif.js"></script>
+  <script src="gif.worker.js"></script>  
+
   <img id="pencil-cursor" src="img/pencil-cursor.png" style="display: none">
 </head>
 
@@ -48,7 +52,7 @@
       </svg>
     </button>
 
-    <button id="export"><i class="fas fa-file-export fa-2x"></i></button>
+    <button id="export" onclick="exportGif()"><i class="fas fa-file-export fa-2x"></i></button>
     <button id="trash" onclick="trashit()"><i class="fas fa-trash fa-2x"></i></button>
 
 
@@ -111,6 +115,29 @@
   reset();
 
   let pencilImg = document.getElementById("pencil-cursor");
+
+  // Function to export gif
+  function exportGif() {
+
+    var gif = new GIF({
+      workers: 2,
+      quality: 10
+    });
+
+    // add a canvas element with a given frame delay
+    gif.addFrame(canvasElement, {delay: 200});
+
+    // or copy the pixels from a canvas context
+    //gif.addFrame(displayArea, {copy: true});    
+
+    gif.on('finished', function(blob) {
+      window.open(URL.createObjectURL(blob));
+    });
+
+    gif.render();
+
+  }
+
 
   //Set/reset image
   function reset() {
