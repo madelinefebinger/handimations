@@ -49,9 +49,7 @@
     </button>
 
     <button id="export"><i class="fas fa-file-export fa-2x"></i></button>
-    <button id="trash" onclick="trashit()"><i class="fas fa-trash fa-2x"></i></button>
-
-
+    <button id="trash" onclick="clearLayer()"><i class="fas fa-trash fa-2x"></i></button>
 
   </div>
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -90,7 +88,10 @@
     //Globals
   let canvasElement = document.getElementById("displayArea");
   let displayArea = canvasElement.getContext("2d");
+  let controller = new Leap.Controller();
+  controller.connect();
 
+  let swipeMotion = false;
   let extendedFingers = 0;
 
   let drawMode = false;
@@ -108,6 +109,8 @@
 
   let clickLines;
   let curLine;
+
+  let canvasCounter = 0;
   reset();
 
   let pencilImg = document.getElementById("pencil-cursor");
@@ -190,70 +193,72 @@
   }
 
   //Mouse Mode
-  //Start new line
-  $("#displayArea").mousedown(function(e) {
-    mouseX = e.pageX - this.offsetLeft;
-    mouseY = e.pageY - this.offsetTop;
-    drawMode = clickMode == "draw";
-    eraseMode = !drawMode;
-    clickX = new Array();
-    clickY = new Array();
-    clickColor = new Array();
-    document.getElementById("color").disabled = eraseMode;
-    console.log(clickMode);
-    addPoint(mouseX, mouseY);
-    redraw(mouseX, mouseY);
-  });
 
-  //Toggle modes
-  $("#displayArea").dblclick(function(e) {
-    if (clickMode == "draw") {
-      clickMode = "erase";
-      prevColor = curColor;
-      curColor = "#ffffff";
-      document.getElementById("draw").checked = false;
-      document.getElementById("erase").checked = true;
-    }
-    else {
-      clickMode = "draw";
-      curColor = prevColor;
-      document.getElementById("draw").checked = true;
-      document.getElementById("erase").checked = false;
-    }
-    console.log(clickMode);
-  });
-
-  //Plot line
-  $("#displayArea").mousemove(function(e) {
-    mouseX = e.pageX - this.offsetLeft;
-    mouseY = e.pageY - this.offsetTop;
-    if (drawMode || eraseMode) {
+    //Start new line
+    $("#displayArea").mousedown(function(e) {
+      mouseX = e.pageX - this.offsetLeft;
+      mouseY = e.pageY - this.offsetTop;
+      drawMode = clickMode == "draw";
+      eraseMode = !drawMode;
+      clickX = new Array();
+      clickY = new Array();
+      clickColor = new Array();
+      document.getElementById("color").disabled = eraseMode;
+      console.log(clickMode);
       addPoint(mouseX, mouseY);
       redraw(mouseX, mouseY);
-    }
-  });
+    });
 
-  //End line
-  $("#displayArea").mouseup(function(e) {
-    drawMode = false;
-    eraseMode = false;
-    mouseX = e.pageX - this.offsetLeft;
-    mouseY = e.pageY - this.offsetTop;
-    addLine();
-    redraw(mouseX, mouseY);
-  });
+    //Toggle modes
+    $("#displayArea").dblclick(function(e) {
+      if (clickMode == "draw") {
+        clickMode = "erase";
+        prevColor = curColor;
+        curColor = "#ffffff";
+        document.getElementById("draw").checked = false;
+        document.getElementById("erase").checked = true;
+      }
+      else {
+        clickMode = "draw";
+        curColor = prevColor;
+        document.getElementById("draw").checked = true;
+        document.getElementById("erase").checked = false;
+      }
+      console.log(clickMode);
+    });
 
-  //End line
-  $("#displayArea").mouseleave(function(e) {
-    drawMode = false;
-    eraseMode = false;
-    mouseX = e.pageX - this.offsetLeft;
-    mouseY = e.pageY - this.offsetTop;
-    addLine();
-    redraw(mouseX, mouseY);
-  });
+    //Plot line
+    $("#displayArea").mousemove(function(e) {
+      mouseX = e.pageX - this.offsetLeft;
+      mouseY = e.pageY - this.offsetTop;
+      if (drawMode || eraseMode) {
+        addPoint(mouseX, mouseY);
+        redraw(mouseX, mouseY);
+      }
+    });
 
-  function trashit(){
+    //End line
+    $("#displayArea").mouseup(function(e) {
+      drawMode = false;
+      eraseMode = false;
+      mouseX = e.pageX - this.offsetLeft;
+      mouseY = e.pageY - this.offsetTop;
+      addLine();
+      redraw(mouseX, mouseY);
+    });
+
+    //End line
+    $("#displayArea").mouseleave(function(e) {
+      drawMode = false;
+      eraseMode = false;
+      mouseX = e.pageX - this.offsetLeft;
+      mouseY = e.pageY - this.offsetTop;
+      addLine();
+      redraw(mouseX, mouseY);
+    });
+
+
+  function clearLayer(){
     let check = window.confirm("Clear Layer?");
     if(check){
       reset();
@@ -262,128 +267,140 @@
   }
   //Leap Motion Mode
   //Check if the LeapMotion is connected
-  let controller = Leap.loop({enableGestures: true}, function(frame) {
-    var pointableOutput = document.getElementById("pointableData");
-    var pointableString = "";
-    if (frame.pointables.length > 0) {
-      var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
-      var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
-      for (var i = 0; i < frame.pointables.length; i++) {
-        var pointable = frame.pointables[i];
-        pointableString += "<div style='width:250px; float:left; padding:5px'>";
-        if (pointable.tool) {
-          pointableString += "Pointable ID: " + pointable.id + "<br />";
-          pointableString += "Classified as a tool <br />";
-          pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-          pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-          pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
-          pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
-          pointableString += "</div>";
-        }
-        else {
-          //pointableString += "Pointable ID: " + pointable.id + "<br />";
-          pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
-          //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
-          pointableString += "Classified as a finger<br />";
-          //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-          //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-          //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
-          pointableString += "Extended?: "  + pointable.extended + "<br />";
-          pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
-          pointableString += "</div>";
-        }
-      }
-    }
-    else {
-      pointableString += "<div>No pointables</div>";
-    }
 
-    extendedFingers = 0;
-    if (frame.hands.length != 1) {
-      drawMode = false;
-      eraseMode = false;
-      //alternatively, allow for mouse functionality
-    }
-    else {
-      let hand = frame.hands[0];
-      for (let f = 0; f < hand.fingers.length; f++) {
-        if (hand.fingers[f].extended) {
-          extendedFingers++;
-        }
-      }
-      if (extendedFingers == 5 && frame.valid && frame.gestures.length > 0) {
-        frame.gestures.forEach(function(gesture) {
-          if (gesture.type == "swipe") {
-            //create new canvas with z-index++
-            //set display area to new canvas
-            //call reset() to reset all fields for drawing fresh
-          }
-        });
-      }
-      else if (extendedFingers == 1) {
-        let indexFinger = hand.indexFinger;
-        let pinkyFinger = hand.pinky;
-        let interactionBox = frame.interactionBox;
-        let normalizedPosition = undefined;
-        if (indexFinger.extended) {
-          if (!drawMode) {
-            drawMode = true;
-            displayArea.lineWidth = 5;
-            clickX = new Array();
-            clickY = new Array();
-            clickColor = new Array();
-            clickMode = "draw";
-            document.getElementById("color").disabled = false;
-            document.getElementById("draw").checked = true;
-            document.getElementById("erase").checked = false;
-          }
-          normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
-        }
-        else if (pinkyFinger.extended) {
-          if (!eraseMode) {
-            eraseMode = true;
-            displayArea.lineWidth = 10;
-            clickX = new Array();
-            clickY = new Array();
-            clickColor = new Array();
-            clickMode = "erase";
-            prevColor = curColor;
-            curColor = "#ffffff";
-            document.getElementById("color").disabled = true;
-            document.getElementById("draw").checked = false;
-            document.getElementById("erase").checked = true;
-          }
-          normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
-        }
+    controller = Leap.loop({enableGestures: true}, function(frame) {
+      let checkConnection = controller.isConnected();
 
-        if ((drawMode || eraseMode) && normalizedPosition !== undefined){
-          // Convert the normalized coordinates to span the canvas
-          let canvasX = canvasElement.width * normalizedPosition[0];
-          let canvasY = canvasElement.height * (1 - normalizedPosition[1]);
-          //We can ignore z for a 2D context
-          addPoint(canvasX, canvasY);
+      var pointableOutput = document.getElementById("pointableData");
+      var pointableString = "";
+      if (frame.pointables.length > 0) {
+        var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
+        var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+        for (var i = 0; i < frame.pointables.length; i++) {
+          var pointable = frame.pointables[i];
+          pointableString += "<div style='width:250px; float:left; padding:5px'>";
+          if (pointable.tool) {
+            pointableString += "Pointable ID: " + pointable.id + "<br />";
+            pointableString += "Classified as a tool <br />";
+            pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+            pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+            pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+            pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
+            pointableString += "</div>";
+          }
+          else {
+            //pointableString += "Pointable ID: " + pointable.id + "<br />";
+            pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
+            //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+            pointableString += "Classified as a finger<br />";
+            //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+            //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+            //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+            pointableString += "Extended?: "  + pointable.extended + "<br />";
+            pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
+            pointableString += "</div>";
+          }
         }
       }
       else {
-        //may also want to account for mouse functionality somehow if not using LeapMotion controls
-        if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
-          // Toggle out of drawMode
-          drawMode = false;
-          // Push to clickLines
-          addLine();
+        pointableString += "<div>No pointables</div>";
+      }
+
+      extendedFingers = 0;
+      if (frame.hands.length != 1) {
+        drawMode = false;
+        eraseMode = false;
+        //mouseMode();
+      }
+      else {
+        let hand = frame.hands[0];
+        for (let f = 0; f < hand.fingers.length; f++) {
+          if (hand.fingers[f].extended) {
+            extendedFingers++;
+          }
         }
-        else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
-          // Toggle out of eraseMode
-          eraseMode = false;
-          // Push to clickLines
-          addLine();
-          curColor = prevColor;
+        if (extendedFingers == 5 && frame.valid && frame.gestures.length > 0) {
+          frame.gestures.forEach(function(gesture) {
+            if (gesture.type == "swipe") {
+              if(gesture.direction[0] > 0 && swipeMotion == false){
+              //create new canvas with z-index++
+                canvasCounter++;
+                var currentCan = document.createElement('canvas');
+                currentCan.id = "can" + canvasCounter.toString;
+                currentCan.style.zIndex = canvasCounter;
+              //set display area to new canvas
+              document.body.appendChild(currentCan);
+              //call reset() to reset all fields for drawing fresh
+              reset();
+              }
+              swipeMotion = true;
+            }
+          });
+        }
+        else if (extendedFingers == 1) {
+          let indexFinger = hand.indexFinger;
+          let pinkyFinger = hand.pinky;
+          let interactionBox = frame.interactionBox;
+          let normalizedPosition = undefined;
+          if (indexFinger.extended) {
+            if (!drawMode) {
+              drawMode = true;
+              displayArea.lineWidth = 5;
+              clickX = new Array();
+              clickY = new Array();
+              clickColor = new Array();
+              clickMode = "draw";
+              document.getElementById("color").disabled = false;
+              document.getElementById("draw").checked = true;
+              document.getElementById("erase").checked = false;
+            }
+            normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
+          }
+          else if (pinkyFinger.extended) {
+            if (!eraseMode) {
+              eraseMode = true;
+              displayArea.lineWidth = 10;
+              clickX = new Array();
+              clickY = new Array();
+              clickColor = new Array();
+              clickMode = "erase";
+              prevColor = curColor;
+              curColor = "#ffffff";
+              document.getElementById("color").disabled = true;
+              document.getElementById("draw").checked = false;
+              document.getElementById("erase").checked = true;
+            }
+            normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
+          }
+
+          if ((drawMode || eraseMode) && normalizedPosition !== undefined){
+            // Convert the normalized coordinates to span the canvas
+            let canvasX = canvasElement.width * normalizedPosition[0];
+            let canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+            //We can ignore z for a 2D context
+            addPoint(canvasX, canvasY);
+          }
+        }
+        else {
+          //may also want to account for mouse functionality somehow if not using LeapMotion controls
+          if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
+            // Toggle out of drawMode
+            drawMode = false;
+            // Push to clickLines
+            addLine();
+          }
+          else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
+            // Toggle out of eraseMode
+            eraseMode = false;
+            // Push to clickLines
+            addLine();
+            curColor = prevColor;
+          }
         }
       }
-    }
-    redraw();
-  });
-  controller.connect();
+      redraw();
+    });
+  
   </script>
 
   <script src="js/plugins.js"></script>
