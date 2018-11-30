@@ -1,6 +1,16 @@
-# handimations
+# Handimations
 
-Handimations is a drawing software that utilizes the LeapMotion hand sensor to allow users to draw their own flipbook gifs. 
+Handimations is a drawing software that utilizes the LeapMotion hand sensor to allow users to draw their own flipbook gifs. No sticky-notes or pencil needed! 
+
+## Authors
+
+* **Maddie Febinger** - *Initial work*
+
+* **Victoria Green** - *Initial work*
+
+* **Emily Kazenmayer** - *Initial work*
+
+* **Ananya Srinivasan** - *Initial work*
 
 ## Getting Started
 
@@ -69,12 +79,6 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 ## Versioning
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 ## License
 
