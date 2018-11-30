@@ -263,6 +263,41 @@
   //Leap Motion Mode
   //Check if the LeapMotion is connected
   let controller = Leap.loop({enableGestures: true}, function(frame) {
+    var pointableOutput = document.getElementById("pointableData");
+    var pointableString = "";
+    if (frame.pointables.length > 0) {
+      var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
+      var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+      for (var i = 0; i < frame.pointables.length; i++) {
+        var pointable = frame.pointables[i];
+        pointableString += "<div style='width:250px; float:left; padding:5px'>";
+        if (pointable.tool) {
+          pointableString += "Pointable ID: " + pointable.id + "<br />";
+          pointableString += "Classified as a tool <br />";
+          pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+          pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+          pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+          pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
+          pointableString += "</div>";
+        }
+        else {
+          //pointableString += "Pointable ID: " + pointable.id + "<br />";
+          pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
+          //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
+          pointableString += "Classified as a finger<br />";
+          //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
+          //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
+          //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
+          pointableString += "Extended?: "  + pointable.extended + "<br />";
+          pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
+          pointableString += "</div>";
+        }
+      }
+    }
+    else {
+      pointableString += "<div>No pointables</div>";
+    }
+
     extendedFingers = 0;
     if (frame.hands.length != 1) {
       drawMode = false;
