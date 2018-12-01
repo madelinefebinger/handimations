@@ -18,6 +18,10 @@
 
   <script src="js/jscolor.js"></script>
 
+  <!-- Scripts for gif.js library -->
+  <script src="gif.js"></script>
+  <script src="gif.worker.js"></script>
+
   <img id="pencil-cursor" src="img/pencil-cursor.png" style="display: none">
 </head>
 
@@ -39,7 +43,7 @@
       <label for="erase"><i class="fas fa-eraser fa-2x"></i></label>
     </div>
 
-    <button id="new-layer">
+    <button id="new-layer" onclick="newLayer()">
       <svg width="100%" height="100%" viewBox="0 0 181 174" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
         <path d="M55.544,107.47l-50.544,22.427l85.758,38.139l84.989,-39.349l-49.025,-22.927" style="fill:none;stroke:#000;stroke-width:10px;" />
         <path d="M143.01,5l0,56.774" style="fill:none;stroke:#000;stroke-width:10px;" />
@@ -48,7 +52,7 @@
       </svg>
     </button>
 
-    <button id="export"><i class="fas fa-file-export fa-2x"></i></button>
+    <button id="export" onclick="exportGif()"><i class="fas fa-file-export fa-2x"></i></button>
     <button id="trash" onclick="clearLayer()"><i class="fas fa-trash fa-2x"></i></button>
 
   </div>
@@ -141,6 +145,10 @@
     displayArea.clearRect(0, 0, displayArea.canvas.width, displayArea.canvas.height);
     displayArea.lineJoiun = "round";
 
+    // fill the background with white
+    displayArea.fillStyle="#FFFFFF";
+    displayArea.fillRect(0,0,1200,600);   
+
     for (let i = 0; i < clickLines.length; i++) { //For every line segment
       let line = clickLines[i];
       let xPoints = line[0];
@@ -191,6 +199,40 @@
     clickLines.push(line);
     curLine++;
   }
+
+  // Export gif function
+  function exportGif() {
+
+    var gif = new GIF({
+      workers: 2,
+      quality: 10
+    });
+
+    // add a canvas element with a given frame delay
+    //gif.addFrame(canvasElement, {delay: 200});
+
+    // or copy the pixels from a canvas context
+    //gif.addFrame(displayArea, {copy: true});   
+
+    // add the first frame (displayArea)
+    gif.addFrame(document.getElementById("displayArea"),{delay: 200});
+
+
+    console.log(canvasCounter);
+    for (let i = 1; i <= canvasCounter; i++){
+      console.log("adding frame");
+      let canv = document.getElementById("can" + i.toString());
+      console.log(canv.id);
+      gif.addFrame(canv,{delay: 200});
+    }
+
+    gif.on('finished', function(blob) {
+      window.open(URL.createObjectURL(blob));
+    });
+
+    gif.render();
+
+  }  
 
   //Mouse Mode
     //Start new line
@@ -264,6 +306,41 @@
       redraw(0,0);
     }
   }
+
+  function newLayer(){
+    //create new canvas with z-index++
+    canvasCounter++;
+    let currentCan = document.createElement('canvas');
+    currentCan.id = "can" + canvasCounter.toString();
+    console.log(currentCan.id.toString());
+    currentCan.style.zIndex = canvasCounter;
+
+    // set the size of the new layer
+    currentCan.width = 1200;
+    currentCan.height = 600;    
+
+    // set canvas/context
+    canvasElement = currentCan;
+    displayArea = canvasElement.getContext("2d");
+
+    //set display area to new canvas
+    //currentCan.style.cssText = 'position: absolute; right: 0; top: 0;'
+    //currentCan.style.background = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+    /*
+    if (color){
+      color = false;
+      currentCan.style.background = 'rgba(255,0,0,0.5)';
+    }else{
+      color = true;
+      currentCan.style.background = 'rgba(0,0, 255,0.5)';
+    }
+    */
+    document.body.appendChild(currentCan);
+
+    //call reset() to reset all fields for drawing fresh
+    reset();    
+  }
+
   //Leap Motion Mode
   //Check if the LeapMotion is connected
 
@@ -323,24 +400,7 @@
           frame.gestures.forEach(function(gesture) {
             if (gesture.type == "swipe") {
               if(gesture.direction[0] > 0 && swipeMotion == false){
-              //create new canvas with z-index++
-                canvasCounter++;
-                var currentCan = document.createElement('canvas');
-                currentCan.id = "can" + canvasCounter.toString;
-                currentCan.style.zIndex = canvasCounter;
-              //set display area to new canvas
-                currentCan.style.cssText = 'position: absolute; right: 0; top: 0;'
-      //currentCan.style.background = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
-                if (color){
-                  color = false;
-                  currentCan.style.background = 'rgba(255,0,0,0.5)';
-                }else{
-                  color = true;
-                  currentCan.style.background = 'rgba(0,0, 255,0.5)';
-                }
-              document.body.appendChild(currentCan);
-              //call reset() to reset all fields for drawing fresh
-              reset();
+                newLayer();
               }
               swipeMotion = true;
             }
