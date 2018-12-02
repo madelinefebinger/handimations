@@ -58,7 +58,7 @@
   </div>
 
   <div id="layerDiv">
-    <!-- <canvas id="displayArea2" width="1200" height="600" style="background:rgba(255,255,0,0.5); border:3px solid #123456; position:absolute;z-index:10;"></canvas> TESTING OPACITY -->
+    <!-- <canvas id="displayArea2" width="1200" height="600" style="background:rgba(255,255,0,0.5); border:3px solid #123456; position:absolute;z-index:10;"></canvas> TESTING OPACITY-->
     <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #123456; position:absolute;"></canvas>
   </div> <!--added by me-->
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -319,7 +319,7 @@
     let currentCan = document.createElement('canvas');
     currentCan.id = "can" + canvasCounter.toString();
     console.log(currentCan.id.toString());
-    currentCan.style.cssText = 'position: absolute; border:3px solid #123456;';
+    currentCan.style.cssText = 'position: absolute; border:3px solid #123456; opacity:0.8;';
     currentCan.style.zIndex = canvasCounter;
     currentCan.style.background = 'rgba(255,255,255,0.5)';
 
