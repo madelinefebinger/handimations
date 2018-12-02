@@ -14,6 +14,9 @@ html {
     line-height: 1.4;
 }
 
+body{
+  height: 100%;
+}
 h1{
   font-family: 'Cabin Sketch', cursive;
   font-weight: 700;
@@ -88,12 +91,68 @@ button{
 
 #export{
   padding:25px;
-  margin-right: 25px;
+
 }
 
 #trash{
   padding:25px;
 }
+
+#preview{
+  padding:25px;
+  margin-right: 25px;
+}
+
+
+/* The Modal (background) */
+.modal {
+   display: none; /* Hidden by default */
+   position: fixed; /* Stay in place */
+   z-index: 300; /* Sit on top */
+   left: 0;
+   top: 0;
+   width: 100%; /* Full width */
+   height: 100%; /* Full height */
+   overflow: auto; /* Enable scroll if needed */
+   background-color: rgb(0,0,0); /* Fallback color */
+   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+   background-color: #333;
+   margin: 15% auto; /* 15% from the top and centered */
+   padding: 20px;
+   border: 1px solid #888;
+   color: #ddd;
+   font-family: 'Fredericka the Great', cursive;
+   /*display: inline-block;;*/
+   width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+   color: #aaa;
+   float: right;
+   font-size: 28px;
+   font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+   color: black;
+   text-decoration: none;
+   cursor: pointer;
+}
+
+#animation{
+  width:100%;
+}
+
+#layerDiv{
+  margin-bottom: 50px;
+}
+
 
 /*
  * Remove text-shadow in selection highlight:

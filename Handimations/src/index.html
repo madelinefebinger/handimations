@@ -13,6 +13,7 @@
   <!-- <link rel="stylesheet" href="css/normalize.css"> -->
   <link rel="stylesheet" href="css/main.css">
   <link href="https://fonts.googleapis.com/css?family=Cabin+Sketch|Jua|Open+Sans" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Fredericka+the+Great" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
   <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
 
@@ -52,7 +53,8 @@
       </svg>
     </button>
 
-    <button id="export" onclick="exportGif()"><i class="fas fa-file-export fa-2x"></i></button>
+    <button id="export" onclick="openGif()"><i class="fas fa-file-export fa-2x"></i></button>
+    <button id="preview"><i class="fas fa-play fa-2x"></i></button>
     <button id="trash" onclick="clearLayer()"><i class="fas fa-trash fa-2x"></i></button>
 
   </div>
@@ -60,7 +62,17 @@
   <div id="layerDiv">
     <!-- <canvas id="displayArea2" width="1200" height="600" style="background:rgba(255,255,0,0.5); border:3px solid #123456; position:absolute;z-index:10;"></canvas> TESTING OPACITY-->
     <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #123456; position:absolute;"></canvas>
-  </div> <!--added by me-->
+  </div>
+  <!--added by me-->
+  <div id="previewModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Current Animation</h2>
+      <image id="animation"></image>
+    </div>
+  </div>
+
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
 
@@ -232,13 +244,38 @@
     }
 
     gif.on('finished', function(blob) {
-      window.open(URL.createObjectURL(blob));
+      //window.open(URL.createObjectURL(blob));
+      document.getElementById('animation').src = URL.createObjectURL(blob);
     });
 
     gif.render();
 
   }
 
+  function openGif(){
+    exportGif();
+    window.open(document.getElementById('animation').src);
+  }
+
+    var modal = document.getElementById('previewModal');
+    var btn = document.getElementById("preview");
+    var span = document.getElementsByClassName("close")[0];
+
+    // open the modal
+    btn.onclick = function() {
+      exportGif();
+      modal.style.display = "block";
+    }
+    // close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
   //Mouse Mode
     //Start new line
     $("#displayArea").mousedown(function(e) {
@@ -321,7 +358,7 @@
     console.log(currentCan.id.toString());
     currentCan.style.cssText = 'position: absolute; border:3px solid #123456; opacity:0.8;';
     currentCan.style.zIndex = canvasCounter;
-    currentCan.style.background = 'rgba(255,255,255,0.5)';
+    currentCan.style.background = 'rgb(255,255,255)';
 
     // set the size of the new layer
     currentCan.width = 1200;
@@ -487,6 +524,7 @@
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
+
   <div id="main">
     <!-- <h1>Leap Motion Data</h1> -->
     <button id="pause" onclick="togglePause()">Pause</button>
