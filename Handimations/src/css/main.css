@@ -18,19 +18,8 @@ body{
   height: 100%;
 }
 h1{
-  font-family: 'Cabin Sketch', cursive;
+  font-family: 'Fredericka the Great', cursive;
   font-weight: 700;
-  /*
-
-
-      font-family: 'Cabin Sketch', cursive;
-
-      font-family: 'Jua', sans-serif;
-
-      font-family: 'Open Sans', sans-serif;
-
-
-  */
 }
 
 #canvasDiv{
@@ -64,12 +53,14 @@ h1{
   display: inline-block;
   background: #ddd;
   padding: 20px;
-
+ vertical-align:top;
 }
+
 .mode-toolbar input[type="radio"]:checked+label {
   background-color: #009999;
   color:white;
 }
+
 button{
   display: inline-block;
   float: left;
@@ -79,13 +70,22 @@ button{
   height: 30px;
   padding: 20px;
 }
+
+#leapIcon{
+  width:50px;
+  /*height: 30px;
+  padding: 20px;*/
+  padding: 7px 0px 7px 0px;
+}
 .mode-toolbar{
   display: inline-block;
   float: left;
   margin-right: 25px;
 }
 
-#new-layer{
+.device-toolbar{
+  display: inline-block;
+  float: left;
   margin-right: 25px;
 }
 
@@ -96,6 +96,11 @@ button{
 
 #trash{
   padding:25px;
+}
+
+#undo{
+  padding:25px;
+  margin-right: 25px;
 }
 
 #preview{
@@ -151,6 +156,8 @@ button{
 
 #layerDiv{
   margin-bottom: 50px;
+  cursor: auto;
+  cursor: url(../img/pencil-cursor.png) 4 12, auto;
 }
 
 

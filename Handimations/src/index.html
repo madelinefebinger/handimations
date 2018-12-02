@@ -1,3 +1,12 @@
+<!--
+Course: CSC 355: Human Computer Interaction
+Assignment: Final Project - Handimations
+Group: Hunnie Badgers (Madeline Febinger, Victoria Green, Emily Kazemayer, Ananya Srinivasan)
+Filename: index.html
+Description: Our application allows users to create their own "flipbook" animations, drawn using the LeapMotion or mouse. Includes all of the Javascript code necessary to allow the LeapMotion or mouse to draw images/frames and export the resulting animation as a GIF file.
+HTML is used to represent the elements on the webpage. We utilized the official LeapJS library: https://github.com/leapmotion/leapjs
+-->
+
 <!doctype html>
 <html class="no-js" lang="">
 
@@ -23,7 +32,9 @@
   <script src="gif.js"></script>
   <script src="gif.worker.js"></script>
 
+  <!-- Images for cursors for Draw and Erase mode -->
   <img id="pencil-cursor" src="img/pencil-cursor.png" style="display: none">
+  <img id="eraser-cursor" src="img/eraser-cursor.png" style="display: none; width:50px;height:50px;">
 </head>
 
 <body>
@@ -31,6 +42,7 @@
     <h1>Handimations</h1>
   </div>
 
+  <!-- Create toolbar -->
   <div class="toolbar">
     <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
       <i class="fas fa-palette fa-2x"></i>
@@ -43,7 +55,15 @@
       <input type="radio" id="erase" name="mode" value="erase">
       <label for="erase"><i class="fas fa-eraser fa-2x"></i></label>
     </div>
+    <div class="mode-toolbar">
+      <input type="radio" id="mouse" name="input" value="mouse" checked >
+      <label for="mouse"><i class="fas fa-mouse-pointer fa-2x"></i></i></label>
 
+      <input type="radio" id="leap" name="input" value="leap" >
+      <label for="leap" onclick="leapMode()">
+        <image id="leapIcon" src="img/leap.png"></image>
+      </label>
+    </div>
     <button id="new-layer" onclick="newLayer()">
       <svg width="100%" height="100%" viewBox="0 0 181 174" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
         <path d="M55.544,107.47l-50.544,22.427l85.758,38.139l84.989,-39.349l-49.025,-22.927" style="fill:none;stroke:#000;stroke-width:10px;" />
@@ -53,6 +73,7 @@
       </svg>
     </button>
 
+    <button id="undo" onclick="undo()"><i class="fas fa-undo fa-2x"></i></button>
     <button id="export" onclick="openGif()"><i class="fas fa-file-export fa-2x"></i></button>
     <button id="preview"><i class="fas fa-play fa-2x"></i></button>
     <button id="trash" onclick="clearLayer()"><i class="fas fa-trash fa-2x"></i></button>
@@ -60,8 +81,8 @@
   </div>
 
   <div id="layerDiv">
-    <!-- <canvas id="displayArea2" width="1200" height="600" style="background:rgba(255,255,0,0.5); border:3px solid #123456; position:absolute;z-index:10;"></canvas> TESTING OPACITY-->
-    <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #123456; position:absolute;"></canvas>
+    <!-- Create the canvas, the first layer of the GIF -->
+    <canvas id="can0" width="1200" height="600" style="background:#ffffff; border:3px solid #123456; position:absolute;"></canvas>
   </div>
   <!--added by me-->
   <div id="previewModal" class="modal">
@@ -75,51 +96,26 @@
 
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
-
   <script>
-    function vectorToString(vector, digits) {
-      if (typeof digits === "undefined") {
-        digits = 1;
-      }
-      return "(" + vector[0].toFixed(digits) + ", "
-                 + vector[1].toFixed(digits) + ", "
-                 + vector[2].toFixed(digits) + ")";
-    }
-
-    function togglePause() {
-      paused = !paused;
-      if (paused) {
-        document.getElementById("pause").innerText = "Resume";
-      } else {
-        document.getElementById("pause").innerText = "Pause";
-      }
-    }
-
-    function pauseForGestures() {
-      if (document.getElementById("pauseOnGesture").checked) {
-        pauseOnGesture = true;
-      } else {
-        pauseOnGesture = false;
-      }
-    }
-  </script>
+  //Globals
+  let canvasElement = document.getElementById("can0"); // Canvas
+  let displayArea = canvasElement.getContext("2d"); // Context
 
 
-  <script>
-    //Globals
-  let canvasElement = document.getElementById("displayArea");
-  let displayArea = canvasElement.getContext("2d");
-  //let controller = new Leap.Controller();
-  //controller.connect();
+  // Create a Date to keep track of the last time the user created a new layer with a "swipe" gesture
+  // This prevents many swipe layers from being created at once
+  let dt = new Date(); //Used for getTime()
+  let lastNewCanvasTime = dt.getTime();
+  let leapModeLastFrame = false;
 
-  let swipeMotion = false;
+  //Number of extended fingers over LeapMotion
   let extendedFingers = 0;
 
+  //Check if user is drawing or erasing
   let drawMode = false;
   let eraseMode = false;
-  // drawModeActive = document.getElementById("draw");
-  // eraseModeActive = document.getElementById("draw");
 
+  //Create datatypes to store color and line information when drawing and erasing
   let curColor = "#123456";
   let prevColor = curColor;
   let clickX;
@@ -128,15 +124,21 @@
   let clickColor;
   let clickMode;
 
+  //Datatypes to store all of the line information for the segments
   let clickLines;
   let curLine;
 
+  //Counter for how many canvas layers are created and used
   let canvasCounter = 0;
   reset();
+  mouseMode();
 
-  let pencilImg = document.getElementById("pencil-cursor");
+  // Images for pencil and eraser cursors
+  const pencilImg = document.getElementById("pencil-cursor");
+  const eraserImg = document.getElementById("eraser-cursor");
+  let cursorImg = pencilImg;
 
-  //Set/reset image
+  // Set/reset image
   function reset() {
     clickX = new Array();
     clickY = new Array();
@@ -163,9 +165,10 @@
     displayArea.lineJoiun = "round";
 
     // fill the background with white
-    displayArea.fillStyle="#FFFFFF";
+    displayArea.fillStyle="#ffffff";
     displayArea.fillRect(0,0,1200,600);
 
+    // redraw the canvas
     for (let i = 0; i < clickLines.length; i++) { //For every line segment
       let line = clickLines[i];
       let xPoints = line[0];
@@ -187,23 +190,11 @@
         displayArea.stroke();
       }
     }
-    displayArea.drawImage(pencilImg,canvasX,canvasY-25); //Draw pencil cursor
   }
 
   //Set color to value selected from color picker
   function setStrokeColor(picker) {
     curColor = "#" + picker.toString();
-  }
-
-  //Check whether a single finger is extended
-  function isControlFinger(controllerFingerIdx, frame) {
-    let isOnlyOneExtended = true;
-    for (let j = 0; j < frame.pointables.length; j++) {
-      if (j != controllerFingerIdx) {
-        isOnlyOneExtended = !frame.pointables[j].extended;
-      }
-    }
-    return isOnlyOneExtended;
   }
 
   //Add completed line to array of lines to be displayed
@@ -217,29 +208,31 @@
     curLine++;
   }
 
+  // Undo the most recent line
+  function undo() {
+    if (curLine > 0) {
+      clickLines.pop();
+      curLine--;
+    }
+  }
+
   // Export gif function
+  // Based on the example code from the gif.js library
+  // https://github.com/jnordberg/gif.js
   function exportGif() {
 
+    // Create GIF encoder
     var gif = new GIF({
       workers: 2,
       quality: 10
     });
 
-    // add a canvas element with a given frame delay
-    //gif.addFrame(canvasElement, {delay: 200});
+    // Add the first frame (displayArea)
+    gif.addFrame(document.getElementById("can0"),{delay: 200});
 
-    // or copy the pixels from a canvas context
-    //gif.addFrame(displayArea, {copy: true});
-
-    // add the first frame (displayArea)
-    gif.addFrame(document.getElementById("displayArea"),{delay: 200});
-
-
-    console.log(canvasCounter);
+    // Add the other frames (can1, can2, etc.)
     for (let i = 1; i <= canvasCounter; i++){
-      console.log("adding frame");
       let canv = document.getElementById("can" + i.toString());
-      console.log(canv.id);
       gif.addFrame(canv,{delay: 200});
     }
 
@@ -276,9 +269,16 @@
         modal.style.display = "none";
       }
     }
-  //Mouse Mode
+
+  //Mouse Drawing/Erasing Mode
+  function mouseMode() {
+    let id = "#can" + canvasCounter.toString();
+
+    // indicates to next frame that this frame was in Leap mode
+    leapModeLastFrame = document.getElementById("leap").checked;
+
     //Start new line
-    $("#displayArea").mousedown(function(e) {
+    $(id).mousedown(function(e) {
       mouseX = e.pageX - this.offsetLeft;
       mouseY = e.pageY - this.offsetTop;
       drawMode = clickMode == "draw";
@@ -287,13 +287,12 @@
       clickY = new Array();
       clickColor = new Array();
       document.getElementById("color").disabled = eraseMode;
-      console.log(clickMode);
       addPoint(mouseX, mouseY);
       redraw(mouseX, mouseY);
     });
 
-    //Toggle modes
-    $("#displayArea").dblclick(function(e) {
+    //Toggle draw/erase modes
+    $(id).dblclick(function(e) {
       if (clickMode == "draw") {
         clickMode = "erase";
         prevColor = curColor;
@@ -307,11 +306,10 @@
         document.getElementById("draw").checked = true;
         document.getElementById("erase").checked = false;
       }
-      console.log(clickMode);
     });
 
     //Plot line
-    $("#displayArea").mousemove(function(e) {
+    $(id).mousemove(function(e) {
       mouseX = e.pageX - this.offsetLeft;
       mouseY = e.pageY - this.offsetTop;
       if (drawMode || eraseMode) {
@@ -321,7 +319,7 @@
     });
 
     //End line
-    $("#displayArea").mouseup(function(e) {
+    $(id).mouseup(function(e) {
       drawMode = false;
       eraseMode = false;
       mouseX = e.pageX - this.offsetLeft;
@@ -331,7 +329,7 @@
     });
 
     //End line
-    $("#displayArea").mouseleave(function(e) {
+    $(id).mouseleave(function(e) {
       drawMode = false;
       eraseMode = false;
       mouseX = e.pageX - this.offsetLeft;
@@ -339,8 +337,9 @@
       addLine();
       redraw(mouseX, mouseY);
     });
+  }
 
-
+  //Clear the drawn layer if the corresponding button is toggled
   function clearLayer(){
     let check = window.confirm("Clear Layer?");
     if(check){
@@ -349,118 +348,80 @@
     }
   }
 
+  //Create new layers with a swipe motion or onClick() with the corresponding button
   function newLayer(){
     //create new canvas with z-index++
     reset(); //temporarily moved here reset first allowed multiple layers to gif
     canvasCounter++;
     let currentCan = document.createElement('canvas');
     currentCan.id = "can" + canvasCounter.toString();
-    console.log(currentCan.id.toString());
     currentCan.style.cssText = 'position: absolute; border:3px solid #123456; opacity:0.8;';
     currentCan.style.zIndex = canvasCounter;
     currentCan.style.background = 'rgb(255,255,255)';
 
-    // set the size of the new layer
+    // Set the size of the new layer
     currentCan.width = 1200;
     currentCan.height = 600;
 
-    // set canvas/context
+    // Set canvas/context
     canvasElement = currentCan;
     displayArea = canvasElement.getContext("2d");
 
-    //set display area to new canvas
-    //currentCan.style.cssText = 'position: absolute; right: 0; top: 0;'
-    //currentCan.style.background = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
-    /*
-    if (color){
-      color = false;
-      currentCan.style.background = 'rgba(255,0,0,0.5)';
-    }else{
-      color = true;
-      currentCan.style.background = 'rgba(0,0, 255,0.5)';
-    }
-    */
-    //document.body.appendChild(currentCan);
+    // Add the new canvas
     document.getElementById('layerDiv').appendChild(currentCan);
 
-    //call reset() to reset all fields for drawing fresh
-
+    // Set time of new canvas creation
+    lastNewCanvasTime = dt.getTime();
+    mouseMode();
   }
 
   //Leap Motion Mode
   //Check if the LeapMotion is connected
-
-  let controller = Leap.loop({enableGestures: true}, function(frame) {
-      //check connection
-      // if (controller.connected()){
-      //   console.log("connected");
-      // } else {
-      //   console.log("disconnected");
-      // }
-      var pointableOutput = document.getElementById("pointableData");
-      var pointableString = "";
-      if (frame.pointables.length > 0) {
-        var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
-        var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
-        for (var i = 0; i < frame.pointables.length; i++) {
-          var pointable = frame.pointables[i];
-          pointableString += "<div style='width:250px; float:left; padding:5px'>";
-          if (pointable.tool) {
-            pointableString += "Pointable ID: " + pointable.id + "<br />";
-            pointableString += "Classified as a tool <br />";
-            pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-            pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-            pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
-            pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />"
-            pointableString += "</div>";
-          }
-          else {
-            //pointableString += "Pointable ID: " + pointable.id + "<br />";
-            pointableString += "Type: " + fingerTypeMap[pointable.type] + "<br />";
-            //pointableString += "Belongs to hand with ID: " + pointable.handId + "<br />";
-            pointableString += "Classified as a finger<br />";
-            //pointableString += "Length: " + pointable.length.toFixed(1) + " mm<br />";
-            //pointableString += "Width: "  + pointable.width.toFixed(1) + " mm<br />";
-            //pointableString += "Direction: " + vectorToString(pointable.direction, 2) + "<br />";
-            pointableString += "Extended?: "  + pointable.extended + "<br />";
-            pointableString += "Tip position: " + vectorToString(pointable.tipPosition) + " mm<br />";
-            pointableString += "</div>";
-          }
-        }
+  function leapMode() {
+    let controller = Leap.loop({enableGestures: true}, function(frame) {
+      // Check LeapMotion connection
+      if ( (!controller.connected() || !document.getElementById("leap").checked ) && leapModeLastFrame){
+        return;
       }
-      else {
-        pointableString += "<div>No pointables</div>";
-      }
+      // indicates to next frame that this frame was in Leap mode
+      leapModeLastFrame = document.getElementById("leap").checked;
 
+      // Create interaction box to plot coordinates drawn with LeapMotion
+      let interactionBox = frame.interactionBox;
+      let normalizedPosition = [-1,-1];
+      dt = new Date();
+
+      //If no hands are held over the LeapMotion, do not enable drawing or erasing by the LeapMotion
       extendedFingers = 0;
       if (frame.hands.length != 1) {
         drawMode = false;
         eraseMode = false;
-        //mouseMode();
       }
       else {
         let hand = frame.hands[0];
+        let indexFinger = hand.indexFinger;
+        normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
         for (let f = 0; f < hand.fingers.length; f++) {
           if (hand.fingers[f].extended) {
             extendedFingers++;
           }
         }
         if (extendedFingers == 5 && frame.valid && frame.gestures.length > 0) {
+          // There are 5 fingers extended and a swipe gesture, so check if enough time has elapsed to create a new layer
           frame.gestures.forEach(function(gesture) {
-            if (gesture.type == "swipe") {
-              if(gesture.direction[0] > 0 && swipeMotion == false){
-                newLayer();
-              }
-              swipeMotion = true;
+            //Check if it is left-to-right movement swipe and enough time has passed between last swipe/add layer
+            if (gesture.type == "swipe" && gesture.direction[0] > 0 && lastNewCanvasTime + 1000 < dt.getTime()){
+              //Time has passed since last time swiping, so we can create a new layer
+              cursorImg.style.display = "none"; // Prevent cursor from displaying in the GIF
+              redraw();
+              newLayer(); // Create new layer
             }
           });
         }
         else if (extendedFingers == 1) {
-          let indexFinger = hand.indexFinger;
           let pinkyFinger = hand.pinky;
-          let interactionBox = frame.interactionBox;
-          let normalizedPosition = undefined;
           if (indexFinger.extended) {
+            // Only the index finger is extended, so switch to draw mode
             if (!drawMode) {
               drawMode = true;
               displayArea.lineWidth = 5;
@@ -471,10 +432,11 @@
               document.getElementById("color").disabled = false;
               document.getElementById("draw").checked = true;
               document.getElementById("erase").checked = false;
+              cursorImg = pencilImg;
             }
-            normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
           }
           else if (pinkyFinger.extended) {
+            // Only the pinky is extended, so switch to erase mode
             if (!eraseMode) {
               eraseMode = true;
               displayArea.lineWidth = 10;
@@ -487,8 +449,9 @@
               document.getElementById("color").disabled = true;
               document.getElementById("draw").checked = false;
               document.getElementById("erase").checked = true;
+              cursorImg = eraserImg; // Change the cursor image to the eraser
             }
-            normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
+            normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true); // Set the position to draw the cursor
           }
 
           if ((drawMode || eraseMode) && normalizedPosition !== undefined){
@@ -500,8 +463,8 @@
           }
         }
         else {
-          //may also want to account for mouse functionality somehow if not using LeapMotion controls
-          if (drawMode){ // If we're in draw mode, check if the index finger is no longer extended
+          if (drawMode){
+            // If we're in draw mode, check if the index finger is no longer extended
             // Toggle out of drawMode
             drawMode = false;
             // Push to clickLines
@@ -517,23 +480,18 @@
         }
       }
       redraw();
-      swipeMotion = false;
+      if (normalizedPosition[0] != -1 && normalizedPosition[1] != -1) { // If the cursor is on the screen
+        let canvasX = canvasElement.width * normalizedPosition[0];
+        let canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+        displayArea.drawImage(cursorImg, canvasX, canvasY-25); // Draw the cursor
+      }
     });
+  }
 
   </script>
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
-
-  <div id="main">
-    <!-- <h1>Leap Motion Data</h1> -->
-    <button id="pause" onclick="togglePause()">Pause</button>
-    <input type="checkbox" id="pauseOnGesture" onclick="pauseForGestures()">Pause on gesture</input>
-    <div style="clear:both;"></div>
-    <h3>Finger and tool data:</h3>
-    <div id="pointableData"></div>
-    <div style="clear:both;"></div>
-  </div>
 
 </body>
 
