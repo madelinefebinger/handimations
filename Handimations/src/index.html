@@ -56,6 +56,11 @@
     <button id="trash" onclick="clearLayer()"><i class="fas fa-trash fa-2x"></i></button>
 
   </div>
+
+  <div id="layerDiv">
+    <!-- <canvas id="displayArea2" width="1200" height="600" style="background:rgba(255,255,0,0.5); border:3px solid #123456; position:absolute;z-index:10;"></canvas> TESTING OPACITY -->
+    <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #123456; position:absolute;"></canvas>
+  </div> <!--added by me-->
   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
 
@@ -87,7 +92,7 @@
     }
   </script>
 
-  <canvas id="displayArea" width="1200" height="600" style="background:#ffffff; border:3px solid #123456;"></canvas>
+
   <script>
     //Globals
   let canvasElement = document.getElementById("displayArea");
@@ -147,7 +152,7 @@
 
     // fill the background with white
     displayArea.fillStyle="#FFFFFF";
-    displayArea.fillRect(0,0,1200,600);   
+    displayArea.fillRect(0,0,1200,600);
 
     for (let i = 0; i < clickLines.length; i++) { //For every line segment
       let line = clickLines[i];
@@ -212,7 +217,7 @@
     //gif.addFrame(canvasElement, {delay: 200});
 
     // or copy the pixels from a canvas context
-    //gif.addFrame(displayArea, {copy: true});   
+    //gif.addFrame(displayArea, {copy: true});
 
     // add the first frame (displayArea)
     gif.addFrame(document.getElementById("displayArea"),{delay: 200});
@@ -232,7 +237,7 @@
 
     gif.render();
 
-  }  
+  }
 
   //Mouse Mode
     //Start new line
@@ -309,15 +314,18 @@
 
   function newLayer(){
     //create new canvas with z-index++
+    reset(); //temporarily moved here reset first allowed multiple layers to gif
     canvasCounter++;
     let currentCan = document.createElement('canvas');
     currentCan.id = "can" + canvasCounter.toString();
     console.log(currentCan.id.toString());
+    currentCan.style.cssText = 'position: absolute; border:3px solid #123456;';
     currentCan.style.zIndex = canvasCounter;
+    currentCan.style.background = 'rgba(255,255,255,0.5)';
 
     // set the size of the new layer
     currentCan.width = 1200;
-    currentCan.height = 600;    
+    currentCan.height = 600;
 
     // set canvas/context
     canvasElement = currentCan;
@@ -335,10 +343,11 @@
       currentCan.style.background = 'rgba(0,0, 255,0.5)';
     }
     */
-    document.body.appendChild(currentCan);
+    //document.body.appendChild(currentCan);
+    document.getElementById('layerDiv').appendChild(currentCan);
 
     //call reset() to reset all fields for drawing fresh
-    reset();    
+
   }
 
   //Leap Motion Mode
@@ -346,11 +355,11 @@
 
   let controller = Leap.loop({enableGestures: true}, function(frame) {
       //check connection
-      if (controller.connected()){
-        console.log("connected");
-      } else {
-        console.log("disconnected");
-      }
+      // if (controller.connected()){
+      //   console.log("connected");
+      // } else {
+      //   console.log("disconnected");
+      // }
       var pointableOutput = document.getElementById("pointableData");
       var pointableString = "";
       if (frame.pointables.length > 0) {
@@ -478,7 +487,6 @@
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
-
   <div id="main">
     <!-- <h1>Leap Motion Data</h1> -->
     <button id="pause" onclick="togglePause()">Pause</button>
