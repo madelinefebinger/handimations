@@ -71,6 +71,12 @@ Use the mouse of the computer you are using the application with.
    * Switch to LeapMotion mode: Click the LeapMotion button on the toolbar
    * Undo last line: Click the Undo button on the toolbar with your mouse
    * Clear current layer: Click the Trash button on the toolbar
+   
+### Exporting Animations
+
+* Export GIF: Click the Export button on the toolbar. The GIF will open in a new window. Right-click the GIF and select “Save Image As” to download the GIF to your computer. 
+* Preview GIF: Click the Play button on the toolbar
+
 
 ## Acknowledgments
 
