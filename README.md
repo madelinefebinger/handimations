@@ -14,33 +14,17 @@ Handimations is a drawing software that utilizes the LeapMotion hand sensor to a
 
 ## Getting Started
 
-To get started, clone or fork our repository on GitHub. The main file we are working from is *Handimations/src/index.html*. Styling is handled by *Handimations/css/main.css*. See deployment for notes on how to deploy the project on a live system.
+To get started, clone or fork our repository on GitHub. The main file we are working from is *Handimations/src/index.html*. Styling is handled by *Handimations/css/main.css*. See deployment for notes on how to deploy the project.
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+Ensure that JavaScript is enabled in your browser of choice. 
 
 ```
 Give examples
 ```
 
-### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
