@@ -210,10 +210,14 @@ HTML is used to represent the elements on the webpage. We utilized the official 
 
   // Undo the most recent line
   function undo() {
-    if (curLine > 0) {
+    if (curLine >= 0) {
       clickLines.pop();
       curLine--;
     }
+    if (curLine < 0) {
+      addLine();
+    }
+    redraw();
   }
 
   // Export gif function
@@ -320,22 +324,26 @@ HTML is used to represent the elements on the webpage. We utilized the official 
 
     //End line
     $(id).mouseup(function(e) {
+      if (drawMode || eraseMode) {
+        mouseX = e.pageX - this.offsetLeft;
+        mouseY = e.pageY - this.offsetTop;
+        addLine();
+        redraw(mouseX, mouseY);
+      }
       drawMode = false;
       eraseMode = false;
-      mouseX = e.pageX - this.offsetLeft;
-      mouseY = e.pageY - this.offsetTop;
-      addLine();
-      redraw(mouseX, mouseY);
     });
 
     //End line
     $(id).mouseleave(function(e) {
+      if (drawMode || eraseMode) {
+        mouseX = e.pageX - this.offsetLeft;
+        mouseY = e.pageY - this.offsetTop;
+        addLine();
+        redraw(mouseX, mouseY);
+      }
       drawMode = false;
       eraseMode = false;
-      mouseX = e.pageX - this.offsetLeft;
-      mouseY = e.pageY - this.offsetTop;
-      addLine();
-      redraw(mouseX, mouseY);
     });
   }
 
