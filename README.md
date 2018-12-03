@@ -46,8 +46,31 @@ Explaining the functions
      * gif.worker.js.map
 
 The exportGif() function in index.html creates a GIF object and uses the following functions from the gif.js library
-      * gif.addFrame(canvasElement, delay) - adds a new frame with a given delay
-      * gif.render() - creates the finished gif
+gif.addFrame(canvasElement, delay) - adds a new frame with a given delay
+gif.render() - creates the finished gif
+
+## Controls
+
+### LeapMotion
+
+Hold one hand over the LeapMotion, with your palm facing down. 
+   * Change color: Use the color palette button on the toolbar with your mouse and select a color using the color picker
+   * Draw: Point with your index finger and move your finger over the LeapMotion area
+   * Erase: Point with your pinky and move your finger over the LeapMotion area
+   * Switch to mouse mode: Click the Cursor button on the toolbar
+   * Create a new layer: Make a swiping motion from left to right
+   * Undo last line: Click the Undo button on the toolbar with your mouse
+   * Clear current layer: Click the Trash button on the toolbar
+
+### Mouse
+
+Use the mouse of the computer you are using the application with.
+   * Change color: Use the color palette button on the toolbar with your mouse and select a color using the color picker
+   * Draw: Toggle the Draw button (“Pencil” icon). To start drawing, use your mouse to click on the area of the drawing canvas you want to start at. Drag your mouse across the canvas to draw a line. To stop, click the area you want to stop and release your mouse.
+   * Erase: Toggle the Erase button (“Eraser” icon). Follow the same instructions as Draw to erase lines. 
+   * Switch to LeapMotion mode: Click the LeapMotion button on the toolbar
+   * Undo last line: Click the Undo button on the toolbar with your mouse
+   * Clear current layer: Click the Trash button on the toolbar
 
 ## Acknowledgments
 
