@@ -88,6 +88,4 @@ Use the mouse of the computer you are using the application with.
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* Our testers
