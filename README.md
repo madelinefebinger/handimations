@@ -57,6 +57,15 @@ To run the application, navigate to *Handimations/src/index.html* and open the f
      * gif.addFrame(canvasElement, delay) - adds a new frame with a given delay
      * gif.render() - creates the finished gif
 
+## Features
+
+* *Multilayered Drawing*: Users can draw their own images for flipbooks, layer by layer. These layers represent a frame in the animation.
+    * *Erasing and undo*: Lines can be erased or removed completely with the eraser tool or undo button. This allows for easy reversable actions.
+    * *Color Change*: User's can change the color of the drawing cursor using a color picker, thus allowing colorful animations!
+* *Drawing Playback*: Users can view the progress of their flipbook with the playback button, which shows the animation they have made so far. The animation is updated as layers are added.
+* *Animation Exporting as GIFs*: The resulting animation can be exported as a GIF for easy sharing.
+
+
 ## Controls
 
 ### LeapMotion
