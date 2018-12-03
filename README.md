@@ -68,6 +68,8 @@ To run the application, navigate to *Handimations/src/index.html* and open the f
 
 ## Controls
 
+![Toolbar](https://github.com/madelinefebinger/handimations/blob/master/Handimations/src/img/Screen%20Shot%202018-12-02%20at%2010.png)
+
 ### LeapMotion
 
 Hold one hand over the LeapMotion, with your palm facing down. 
