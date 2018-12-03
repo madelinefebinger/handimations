@@ -1,28 +1,48 @@
+<!--
+Course: CSC 355: Human Computer Interaction
+Assignment: Final Project - Handimations
+Group: Hunnie Badgers (Madeline Febinger, Victoria Green, Emily Kazemayer, Ananya Srinivasan)
+Filename: index.html
+Description: Our application allows users to create their own "flipbook" animations, drawn using the LeapMotion or mouse. Includes all of the Javascript code necessary to allow the LeapMotion or mouse to draw images/frames and export the resulting animation as a GIF file.
+HTML is used to represent the elements on the webpage. We utilized the official LeapJS library: https://github.com/leapmotion/leapjs
+-->
 
-<!DOCTYPE html>
+<!doctype html>
 <html class="no-js" lang="">
 
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-
+  <title></title>
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+  <link rel="manifest" href="site.webmanifest">
+
   <!-- <link rel="stylesheet" href="css/normalize.css"> -->
   <link rel="stylesheet" href="css/main.css">
-  <link rel="manifest" href="site.webmanifest">
   <link href="https://fonts.googleapis.com/css?family=Cabin+Sketch|Jua|Open+Sans" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Fredericka+the+Great" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
   <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
-  <script src="https://unpkg.com/konva@2.4.2/konva.min.js"></script>
+
   <script src="js/jscolor.js"></script>
-  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+  <!-- Scripts for gif.js library -->
+  <script src="gif.js"></script>
+  <script src="gif.worker.js"></script>
+
+  <!-- Images for cursors for Draw and Erase mode -->
+  <img id="pencil-cursor" src="img/pencil-cursor.png" style="display: none">
+  <img id="eraser-cursor" src="img/eraser-cursor.png" style="display: none; width:50px;height:50px;">
 </head>
 
 <body>
-  <h1>Handimations</h1>
+  <div class="topBar">
+    <h1>Handimations</h1>
+  </div>
 
+  <!-- Create toolbar -->
   <div class="toolbar">
     <button id="color" class="jscolor {valueElement:'chosen-value', onFineChange:'setStrokeColor(this)'}">
       <i class="fas fa-palette fa-2x"></i>
@@ -35,295 +55,452 @@
       <input type="radio" id="erase" name="mode" value="erase">
       <label for="erase"><i class="fas fa-eraser fa-2x"></i></label>
     </div>
+    <div class="mode-toolbar">
+      <input type="radio" id="mouse" name="input" value="mouse" checked >
+      <label for="mouse"><i class="fas fa-mouse-pointer fa-2x"></i></i></label>
 
-    <button id="new-layer">
+      <input type="radio" id="leap" name="input" value="leap" >
+      <label for="leap" onclick="leapMode()">
+        <image id="leapIcon" src="img/leap.png"></image>
+      </label>
+    </div>
+    <button id="new-layer" onclick="newLayer()">
       <svg width="100%" height="100%" viewBox="0 0 181 174" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
-        <path d="M55.544,107.47l-50.544,22.427l85.758,38.139l84.989,-39.349l-49.025,-22.927" style="fill:none;stroke:#000;stroke-width:10px;"/><path d="M143.01,5l0,56.774" style="fill:none;stroke:#000;stroke-width:10px;"/>
-        <path d="M171.397,31.783l-56.774,0" style="fill:none;stroke:#000;stroke-width:10px;"/>
-        <path d="M83.939,48.966l-76.181,33.81l82.668,38.336l83.332,-35.386" style="fill:none;stroke:#000;stroke-width:10px;"/>
+        <path d="M55.544,107.47l-50.544,22.427l85.758,38.139l84.989,-39.349l-49.025,-22.927" style="fill:none;stroke:#000;stroke-width:10px;" />
+        <path d="M143.01,5l0,56.774" style="fill:none;stroke:#000;stroke-width:10px;" />
+        <path d="M171.397,31.783l-56.774,0" style="fill:none;stroke:#000;stroke-width:10px;" />
+        <path d="M83.939,48.966l-76.181,33.81l82.668,38.336l83.332,-35.386" style="fill:none;stroke:#000;stroke-width:10px;" />
       </svg>
-   </button>
+    </button>
 
-    <button id="export"><i class="fas fa-file-export fa-2x"></i></button>
+    <button id="undo" onclick="undo()"><i class="fas fa-undo fa-2x"></i></button>
+    <button id="export" onclick="openGif()"><i class="fas fa-file-export fa-2x"></i></button>
+    <button id="preview"><i class="fas fa-play fa-2x"></i></button>
+    <button id="trash" onclick="clearLayer()"><i class="fas fa-trash fa-2x"></i></button>
+
   </div>
-  
+
+  <div id="layerDiv">
+    <!-- Create the canvas, the first layer of the GIF -->
+    <canvas id="can0" width="1200" height="600" style="background:#ffffff; border:3px solid #123456; position:absolute;"></canvas>
+  </div>
+  <!--added by me-->
+  <div id="previewModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Current Animation</h2>
+      <image id="animation"></image>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
   <script>
-     //set color from color picker
-     function setStrokeColor(picker) {
-       curColor = "#" + picker.toString();
-     }
-  </script>
+  //Globals
+  let canvasElement = document.getElementById("can0"); // Canvas
+  let displayArea = canvasElement.getContext("2d"); // Context
 
-  <div id="container"></div>
 
-  <script>
-    //set up width and height on canvas
-    var width = window.innerWidth;
-    var height = window.innerHeight - 25;
-    var curColor = "#000000";
+  // Create a Date to keep track of the last time the user created a new layer with a "swipe" gesture
+  // This prevents many swipe layers from being created at once
+  let dt = new Date(); //Used for getTime()
+  let lastNewCanvasTime = dt.getTime();
+  let leapModeLastFrame = false;
 
-    // first we need Konva core things: stage and layer
-    var stage = new Konva.Stage({
-      container: 'container',
-      width: width,
-      height: height
-    });
+  //Number of extended fingers over LeapMotion
+  let extendedFingers = 0;
 
-    //Keep track of layers
-    var layer_list = new Array();
-    var ly = 0;
+  //Check if user is drawing or erasing
+  let drawMode = false;
+  let eraseMode = false;
 
-    //Add first layer and increment
-    layer_list[ly] = new Konva.Layer();
-    stage.add(layer_list[ly]);
+  //Create datatypes to store color and line information when drawing and erasing
+  let curColor = "#123456";
+  let prevColor = curColor;
+  let clickX;
+  let clickY;
+  let clickDrag;
+  let clickColor;
+  let clickMode;
 
-    // then we are going to draw into special canvas element
-    var canvas = document.createElement('canvas');
-    canvas.width = stage.width()/2;
-    canvas.height = stage.height()/2;
+  //Datatypes to store all of the line information for the segments
+  let clickLines;
+  let curLine;
 
-    // created canvas, we can add to layer as "Konva.Image" element
-    var image = new Konva.Image({
-      image: canvas,
-      x: stage.width()/10,
-      y: stage.height()/10,
-      stroke: 'blue',
-      //shadowBlur: 5
-    });
-    layer_list[ly].add(image);
-    stage.draw();
+  //Counter for how many canvas layers are created and used
+  let canvasCounter = 0;
+  reset();
+  mouseMode();
 
-    //get access to context element
-    var context = canvas.getContext('2d');
-    context.strokeStyle = curColor;
-    context.lineJoin = "round";
-    context.lineWidth = 5;
+  // Images for pencil and eraser cursors
+  const pencilImg = document.getElementById("pencil-cursor");
+  const eraserImg = document.getElementById("eraser-cursor");
+  let cursorImg = pencilImg;
 
-    //Determine whether it is a swipe motion or extended fingers
-    var swipeMotion = false;
-    var extendedFingers = 0;
+  // Set/reset image
+  function reset() {
+    clickX = new Array();
+    clickY = new Array();
+    clickDrag = new Array();
+    clickColor = new Array();
+    clickMode = "draw";
 
-    //Set up history of drawings
-    var clickX = new Array();
-    var clickY = new Array();
-    var clickColor = new Array();
-    var clickMode = "draw";
-    var prevColor = curColor;
-    var leave_off = false;
+    clickLines = new Array();
+    curLine = -1;
+    addLine();
+  }
 
-    //Set start x and y coordinate history
-    //Plot on image layer
-    clickX.push(image.x());
-    clickY.push(image.y());
-    clickColor.push(curColor);
-    var inx = 0;
+  //Add new point data to current line
+  function addPoint(canvasX, canvasY) {
+    clickLines[curLine][0].push(canvasX);
+    clickLines[curLine][1].push(canvasY);
+    clickLines[curLine][2].push(curColor);
+    clickLines[curLine][3] = clickMode;
+  }
 
-    // Create LeapMotion controller, and related objects
-    var controller = Leap.loop({enableGestures: true}, function(frame){
-      /* The amount of fingers is not 5 (swipe motion) but there are fingers held out
-        Check how many fingers are extended */
-      if(frame.hands.length == 1){
-        //One hand is held out over LeapMotion
-        var hand = frame.hands[0];
-        for(var f = 0; f < hand.fingers.length; f++){
-          var finger = hand.fingers[f];
-          if(finger.extended) extendedFingers++;
-        }
+  //Display paths drawn
+  function redraw(canvasX, canvasY) {
+    displayArea.clearRect(0, 0, displayArea.canvas.width, displayArea.canvas.height);
+    displayArea.lineJoiun = "round";
+
+    // fill the background with white
+    displayArea.fillStyle="#ffffff";
+    displayArea.fillRect(0,0,1200,600);
+
+    // redraw the canvas
+    for (let i = 0; i < clickLines.length; i++) { //For every line segment
+      let line = clickLines[i];
+      let xPoints = line[0];
+      let yPoints = line[1];
+      let colorPoints = line[2];
+      if (line[3] == "draw") {
+        displayArea.lineWidth = 5;
       }
+      else if (line[3] == "erase") {
+        displayArea.lineWidth = 10;
+      }
+      for (let j = 1; j < xPoints.length; j++) {//For every point on these lines
+        displayArea.beginPath();
+        displayArea.moveTo(xPoints[j-1], yPoints[j-1]);
 
-      //Debug: Prints how many fingers are extended
-      console.log(extendedFingers);
+        displayArea.lineTo(xPoints[j], yPoints[j]);
+        displayArea.closePath();
+        displayArea.strokeStyle = colorPoints[j];
+        displayArea.stroke();
+      }
+    }
+  }
 
-      //Depending on how many fingers are extended, execute drawing or new layer creation
-      if (extendedFingers > 0) {
-        //Debug: Prints if the if-statement is entered
-        console.log("!!!");
+  //Set color to value selected from color picker
+  function setStrokeColor(picker) {
+    curColor = "#" + picker.toString();
+  }
 
-        if (extendedFingers == 5) {
-            //If 5 - swipe for new layer
-            //All fingers are held out - so check if it is a swipe gesture
-            if(frame.valid && frame.gestures.length > 0){
-              frame.gestures.forEach(function(gesture){
-                  switch (gesture.type){
-                    case "swipe":
-                        /* Check if all five fingers are used for swipe and direction is moving right
-                        If 5, create a new layer */
-                        if(gesture.direction[0] > 0 && swipeMotion == false){
-                          image = new Konva.Image({
-                            image: canvas,
-                            x: stage.width()/10,
-                            y: stage.height()/10
-                          });
+  //Add completed line to array of lines to be displayed
+  function addLine() {
+    let line = new Array();
+    line.push(clickX);
+    line.push(clickY);
+    line.push(clickColor);
+    line.push(clickMode);
+    clickLines.push(line);
+    curLine++;
+  }
 
-                          //Create a new layer and append it to layer list
-                          ly++;
-                          layer_list[ly] = new Konva.Layer();
-                          layer_list[ly].add(image);
-                          stage.add(layer_list[ly]);
-                          layer_list[ly-1].alpha(0.1);
-                          stage.draw();
+  // Undo the most recent line
+  function undo() {
+    if (curLine >= 0) {
+      clickLines.pop();
+      curLine--;
+    }
+    if (curLine < 0) {
+      addLine();
+    }
+    redraw();
+  }
 
-                          //Debug
-                          console.log("New layer");
+  // Export gif function
+  // Based on the example code from the gif.js library
+  // https://github.com/jnordberg/gif.js
+  function exportGif() {
 
-                          swipeMotion = true;
-                          leave_off = true;
-                        }
+    // Create GIF encoder
+    var gif = new GIF({
+      workers: 2,
+      quality: 10
+    });
 
-                        var isPaint = false;
-                        var lastPointerPosition;
-                        var mode = 'brush';
+    // Add the first frame (displayArea)
+    gif.addFrame(document.getElementById("can0"),{delay: 200});
 
-                        break;
-                  }
-              });
+    // Add the other frames (can1, can2, etc.)
+    for (let i = 1; i <= canvasCounter; i++){
+      let canv = document.getElementById("can" + i.toString());
+      gif.addFrame(canv,{delay: 200});
+    }
+
+    gif.on('finished', function(blob) {
+      //window.open(URL.createObjectURL(blob));
+      document.getElementById('animation').src = URL.createObjectURL(blob);
+    });
+
+    gif.render();
+
+  }
+
+  function openGif(){
+    exportGif();
+    window.open(document.getElementById('animation').src);
+  }
+
+    var modal = document.getElementById('previewModal');
+    var btn = document.getElementById("preview");
+    var span = document.getElementsByClassName("close")[0];
+
+    // open the modal
+    btn.onclick = function() {
+      exportGif();
+      modal.style.display = "block";
+    }
+    // close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+
+  //Mouse Drawing/Erasing Mode
+  function mouseMode() {
+    let id = "#can" + canvasCounter.toString();
+
+    // indicates to next frame that this frame was in Leap mode
+    leapModeLastFrame = document.getElementById("leap").checked;
+
+    //Start new line
+    $(id).mousedown(function(e) {
+      mouseX = e.pageX - this.offsetLeft;
+      mouseY = e.pageY - this.offsetTop;
+      drawMode = clickMode == "draw";
+      eraseMode = !drawMode;
+      clickX = new Array();
+      clickY = new Array();
+      clickColor = new Array();
+      document.getElementById("color").disabled = eraseMode;
+      addPoint(mouseX, mouseY);
+      redraw(mouseX, mouseY);
+    });
+
+    //Toggle draw/erase modes
+    $(id).dblclick(function(e) {
+      if (clickMode == "draw") {
+        clickMode = "erase";
+        prevColor = curColor;
+        curColor = "#ffffff";
+        document.getElementById("draw").checked = false;
+        document.getElementById("erase").checked = true;
+      }
+      else {
+        clickMode = "draw";
+        curColor = prevColor;
+        document.getElementById("draw").checked = true;
+        document.getElementById("erase").checked = false;
+      }
+    });
+
+    //Plot line
+    $(id).mousemove(function(e) {
+      mouseX = e.pageX - this.offsetLeft;
+      mouseY = e.pageY - this.offsetTop;
+      if (drawMode || eraseMode) {
+        addPoint(mouseX, mouseY);
+        redraw(mouseX, mouseY);
+      }
+    });
+
+    //End line
+    $(id).mouseup(function(e) {
+      if (drawMode || eraseMode) {
+        mouseX = e.pageX - this.offsetLeft;
+        mouseY = e.pageY - this.offsetTop;
+        addLine();
+        redraw(mouseX, mouseY);
+      }
+      drawMode = false;
+      eraseMode = false;
+    });
+
+    //End line
+    $(id).mouseleave(function(e) {
+      if (drawMode || eraseMode) {
+        mouseX = e.pageX - this.offsetLeft;
+        mouseY = e.pageY - this.offsetTop;
+        addLine();
+        redraw(mouseX, mouseY);
+      }
+      drawMode = false;
+      eraseMode = false;
+    });
+  }
+
+  //Clear the drawn layer if the corresponding button is toggled
+  function clearLayer(){
+    let check = window.confirm("Clear Layer?");
+    if(check){
+      reset();
+      redraw(0,0);
+    }
+  }
+
+  //Create new layers with a swipe motion or onClick() with the corresponding button
+  function newLayer(){
+    //create new canvas with z-index++
+    reset(); //temporarily moved here reset first allowed multiple layers to gif
+    canvasCounter++;
+    let currentCan = document.createElement('canvas');
+    currentCan.id = "can" + canvasCounter.toString();
+    currentCan.style.cssText = 'position: absolute; border:3px solid #123456; opacity:0.8;';
+    currentCan.style.zIndex = canvasCounter;
+    currentCan.style.background = 'rgb(255,255,255)';
+
+    // Set the size of the new layer
+    currentCan.width = 1200;
+    currentCan.height = 600;
+
+    // Set canvas/context
+    canvasElement = currentCan;
+    displayArea = canvasElement.getContext("2d");
+
+    // Add the new canvas
+    document.getElementById('layerDiv').appendChild(currentCan);
+
+    // Set time of new canvas creation
+    lastNewCanvasTime = dt.getTime();
+    mouseMode();
+  }
+
+  //Leap Motion Mode
+  //Check if the LeapMotion is connected
+  function leapMode() {
+    let controller = Leap.loop({enableGestures: true}, function(frame) {
+      // Check LeapMotion connection
+      if ( (!controller.connected() || !document.getElementById("leap").checked ) && leapModeLastFrame){
+        return;
+      }
+      // indicates to next frame that this frame was in Leap mode
+      leapModeLastFrame = document.getElementById("leap").checked;
+
+      // Create interaction box to plot coordinates drawn with LeapMotion
+      let interactionBox = frame.interactionBox;
+      let normalizedPosition = [-1,-1];
+      dt = new Date();
+
+      //If no hands are held over the LeapMotion, do not enable drawing or erasing by the LeapMotion
+      extendedFingers = 0;
+      if (frame.hands.length != 1) {
+        drawMode = false;
+        eraseMode = false;
+      }
+      else {
+        let hand = frame.hands[0];
+        let indexFinger = hand.indexFinger;
+        normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
+        for (let f = 0; f < hand.fingers.length; f++) {
+          if (hand.fingers[f].extended) {
+            extendedFingers++;
+          }
+        }
+        if (extendedFingers == 5 && frame.valid && frame.gestures.length > 0) {
+          // There are 5 fingers extended and a swipe gesture, so check if enough time has elapsed to create a new layer
+          frame.gestures.forEach(function(gesture) {
+            //Check if it is left-to-right movement swipe and enough time has passed between last swipe/add layer
+            if (gesture.type == "swipe" && gesture.direction[0] > 0 && lastNewCanvasTime + 1000 < dt.getTime()){
+              //Time has passed since last time swiping, so we can create a new layer
+              cursorImg.style.display = "none"; // Prevent cursor from displaying in the GIF
+              redraw();
+              newLayer(); // Create new layer
             }
-        } else if (extendedFingers == 1){
-            //If 1-4 fingers - drawing
-            //Get index finger from the hand - returns a pointable object
-            var indexFinger = hand.indexFinger;
-            var pinkyFinger = hand.pinky;
-            var interactionBox = frame.interactionBox;
-
-            if (indexFinger.extended){
-              //Only the index finger is extended
-              //Debug:
-              console.log("Drawing");
-
-              var normalizedPosition = interactionBox.normalizePoint(indexFinger.stabilizedTipPosition, true);
-              context.lineWidth = 5;
+          });
+        }
+        else if (extendedFingers == 1) {
+          let pinkyFinger = hand.pinky;
+          if (indexFinger.extended) {
+            // Only the index finger is extended, so switch to draw mode
+            if (!drawMode) {
+              drawMode = true;
+              displayArea.lineWidth = 5;
+              clickX = new Array();
+              clickY = new Array();
+              clickColor = new Array();
               clickMode = "draw";
-
-            } else if (pinkyFinger.extended){
-              //Only the pinky is extended
-              //Debug:
-              console.log("Erasing");
-
-              //Set the cursor color and disable the color picker
-              var normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true);
+              document.getElementById("color").disabled = false;
+              document.getElementById("draw").checked = true;
+              document.getElementById("erase").checked = false;
+              cursorImg = pencilImg;
+            }
+          }
+          else if (pinkyFinger.extended) {
+            // Only the pinky is extended, so switch to erase mode
+            if (!eraseMode) {
+              eraseMode = true;
+              displayArea.lineWidth = 10;
+              clickX = new Array();
+              clickY = new Array();
+              clickColor = new Array();
               clickMode = "erase";
-              context.lineWidth = 10;
               prevColor = curColor;
               curColor = "#ffffff";
               document.getElementById("color").disabled = true;
-
+              document.getElementById("draw").checked = false;
+              document.getElementById("erase").checked = true;
+              cursorImg = eraserImg; // Change the cursor image to the eraser
             }
+            normalizedPosition = interactionBox.normalizePoint(pinkyFinger.stabilizedTipPosition, true); // Set the position to draw the cursor
+          }
 
-            if(pinkyFinger.extended || indexFinger.extended){
-              // Convert the normalized coordinates to span the canvas
-              var canvasX = canvas.width * normalizedPosition[0];
-              var canvasY = canvas.height * (1 - normalizedPosition[1]);
-
-              //Add the coordinates to the history
-              clickX.push(Math.floor(canvasX));
-              clickY.push(Math.floor(canvasY));
-              clickColor.push(curColor);
-              inx++;
-
-              //Draw the line using the given coordinates
-              context.beginPath();
-              context.moveTo(clickX[inx-1], clickY[inx-1]);
-              context.lineTo(clickX[inx], clickY[inx]);
-              context.closePath();
-
-              //To handle the issues with Konva's image object
-              //Need to start from image.x() and image.y() and then plot points, relatively
-              if(inx == 1){
-                //Draw a transparent line from the start of the image point
-                context.strokeStyle = 'rgb(255,0, 0, 0)';
-              } else if (leave_off == true){
-                //Draw a transparent line if there is an interruption
-                context.strokeStyle = 'rgb(255,0, 0, 0)';
-              } else{
-                //Otherwise, draw a normal line
-                context.strokeStyle = clickColor[inx];
-              }
-
-              context.stroke();
-              layer_list[ly].batchDraw();
-
-              //Set the current color to the previous color used now that erasing is done
-              if(pinkyFinger.extended){
-                curColor = prevColor;
-              }
-
-              leave_off = false;
-
-            }
-        } else {
-            //No extended fingers detected, so mouse drawing enabled
-
-            /* now we need to bind some events
-               we need to start drawing on mousedown
-               and stop drawing on mouseup */
-            var isPaint = false;
-            var lastPointerPosition;
-            var mode = 'brush';
-            leave_off = true;
-
-            image.on('mousedown touchstart', function () {
-              isPaint = true;
-              lastPointerPosition = stage.getPointerPosition();
-
-            });
-
-            // will it be better to listen move/end events on the window?
-            stage.addEventListener('mouseup touchend', function () {
-              isPaint = false;
-            });
-
-            // and core function - drawing
-            stage.addEventListener('mousemove touchmove', function () {
-              if (!isPaint) {
-                return;
-              }
-
-              if (mode === 'brush') {
-                context.globalCompositeOperation = 'source-over';
-              }
-              if (mode === 'eraser') {
-                context.globalCompositeOperation = 'destination-out';
-              }
-              context.beginPath();
-
-              var localPos = {
-                x: lastPointerPosition.x - image.x(),
-                y: lastPointerPosition.y - image.y()
-              };
-              context.moveTo(localPos.x, localPos.y);
-              var pos = stage.getPointerPosition();
-              localPos = {
-                x: pos.x - image.x(),
-                y: pos.y - image.y()
-              };
-              context.lineTo(localPos.x, localPos.y);
-              context.closePath();
-              context.strokeStyle = curColor;
-              context.stroke();
-
-              lastPointerPosition = pos;
-              layer_list[ly].batchDraw();
-            });
+          if ((drawMode || eraseMode) && normalizedPosition !== undefined){
+            // Convert the normalized coordinates to span the canvas
+            let canvasX = canvasElement.width * normalizedPosition[0];
+            let canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+            //We can ignore z for a 2D context
+            addPoint(canvasX, canvasY);
+          }
+        }
+        else {
+          if (drawMode){
+            // If we're in draw mode, check if the index finger is no longer extended
+            // Toggle out of drawMode
+            drawMode = false;
+            // Push to clickLines
+            addLine();
+          }
+          else if (eraseMode){ // If we're in erase mode, check if the pinky finger is no longer extended
+            // Toggle out of eraseMode
+            eraseMode = false;
+            // Push to clickLines
+            addLine();
+            curColor = prevColor;
+          }
         }
       }
-      //pointableOutput.innerHTML = pointableString;
+      redraw();
+      if (normalizedPosition[0] != -1 && normalizedPosition[1] != -1) { // If the cursor is on the screen
+        let canvasX = canvasElement.width * normalizedPosition[0];
+        let canvasY = canvasElement.height * (1 - normalizedPosition[1]);
+        displayArea.drawImage(cursorImg, canvasX, canvasY-25); // Draw the cursor
+      }
+    });
+  }
 
-      //reset for next frame
-      extendedFingers = 0;
-      swipeMotion = false;
-      document.getElementById("color").disabled = false;
-   });
-   controller.connect();
   </script>
 
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
 
-  <div id="main">
-     <h3>History:</h3>
-     <div id="pointableData" style="overflow-y: scroll; height:400px;"></div>
-     <div style="clear:both;"></div>
-  </div>
-
 </body>
+
 </html>
