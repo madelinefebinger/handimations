@@ -32,7 +32,8 @@ Explaining the functions
 ## Built With
 
 * [LeapJS](https://developer-archive.leapmotion.com/documentation/javascript/index.html) - LeapMotion Javascript SDK - The official library that supports LeapMotion development in JavaScript. This library represents hands/fingers, along with their movements as objects. Some of this objects and attributes we used in our project include:
-    ** Hand: This object represents the hand(s) held over the LeapMotion sensor. The Hand object consists of an array of Finger attributes. In fact, the LeapMotion has labeled attributes for all of the hands, such as hand.indexFinger and hand.pinky for the respective fingers.
+
+*** Hand: This object represents the hand(s) held over the LeapMotion sensor. The Hand object consists of an array of Finger attributes. In fact, the LeapMotion has labeled attributes for all of the hands, such as hand.indexFinger and hand.pinky for the respective fingers.
 
 * [Atom](https://atom.io/) - IDE for teletyping
 * [gif.js](https://github.com/jnordberg/gif.js) - JavaScript GIF Encoder that runs in your browser
