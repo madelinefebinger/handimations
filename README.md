@@ -18,7 +18,7 @@ To get started, clone or fork our repository on GitHub. The main file we are wor
 
 ### Prerequisites
 
-Ensure that JavaScript is enabled in a Firefox, Internet Explorer, Opera, or Safari browser. Note that the gif making library used in this application is not compatible with Google Chrome. Clone or download this GitHub repository to access the files.
+Ensure that JavaScript is enabled in a Firefox, Internet Explorer, Opera, or Safari browser. Note that the gif making library used in this application is not compatible with Google Chrome, as we were unable to find a GIF exporting library that is compatible. Clone or download this GitHub repository to access the files.
 
 ## Deployment
 
@@ -34,11 +34,20 @@ Explaining the functions
 * [LeapJS](https://developer-archive.leapmotion.com/documentation/javascript/index.html) - LeapMotion Javascript SDK - The official library that supports LeapMotion development in JavaScript. This library represents hands/fingers, along with their movements as objects. Some of this objects and attributes we used in our project include:
 
     * Hand: This object represents the hand(s) held over the LeapMotion sensor. The Hand object consists of an array of Finger attributes. In fact, the LeapMotion has labeled attributes for all of the hands, such as hand.indexFinger and hand.pinky for the respective fingers.
-
+    * Finger: The Finger objects represent the fingers of a hand. We particularly used the extended attribute for the fingers to determine whether the index finger, pinky, or all fingers were extended. 
+    * InteractionBox: The InteractionBox object was used to plot the hand movements on to the canvas element on screen. Using the InteractionBox, we received the normalizedPositions of the fingers, and then plotted the lines between the points using lineTo() and stroke().
+    * Frame: Frames were used to detect hand gestures and movements at a particular instance. We iterate through Frames using Leap.loop() to look for particular gestures or movements. In a particular frame, we can get the fingers and hands 
 
 * [Atom](https://atom.io/) - IDE for teletyping
-* [gif.js](https://github.com/jnordberg/gif.js) - JavaScript GIF Encoder that runs in your browser
+* [gif.js](https://github.com/jnordberg/gif.js) - JavaScript GIF Encoder that runs in your browser - We used the gif.js library to export the animation as a GIF. The following files are from the gif.js library and we did not implement them:
+     * gif.js
+     * gif.js.map
+     * gif.worker.js
+     * gif.worker.js.map
 
+The exportGif() function in index.html creates a GIF object and uses the following functions from the gif.js library
+     * gif.addFrame(canvasElement, delay) - adds a new frame with a given delay
+     * gif.render() - creates the finished gif
 
 ## Acknowledgments
 
