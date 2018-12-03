@@ -1,6 +1,6 @@
 # Handimations
 
-Handimations is a drawing software that utilizes the LeapMotion hand sensor to allow users to draw their own flipbook gifs. No sticky-notes or art supplies needed! This project was developed in Fall 2018 as a final project for CSC 355: Human Computer Interaction.
+Handimations is a drawing application that utilizes the LeapMotion hand sensor to allow users to draw their own flipbook gifs. No sticky-notes or art supplies needed! This project was developed in Fall 2018 as a final project for CSC 355: Human Computer Interaction.
 
 ![screen](https://github.com/madelinefebinger/handimations/blob/master/Handimations/src/img/Screen%20Shot%202018-12-02%20at%209.14.25%20PM.png)
 
@@ -26,10 +26,14 @@ Ensure that JavaScript is enabled in a Firefox, Internet Explorer, Opera, or Saf
 
 To run the application, navigate to *Handimations/src/index.html* and open the file in your browser. Ensure that JavaScript is enabled in your browser.
 
-## Functions
+## Files
 
-Explaining the functions
+* index.html - The main file containing the code for Handimations
+   * A toolbar was implemented with buttons that allow the user to change color, switch between drawing and erasing, add a new layer, exporting the gif, and clear the current layer
+   * Uses the LeapMotion InteractionBox to map hand movements to the canvas
+   * Multiple canvases with different z-indexes create layering functionality
 
+* main.css - Contains the CSS code that was used to style the webpage
 
 ## Built With
 
