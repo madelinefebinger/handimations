@@ -59,7 +59,7 @@ To run the application, navigate to *Handimations/src/index.html* and open the f
 
 ## Features
 
-* *Multilayered Drawing*: Users can draw their own images for flipbooks, layer by layer. These layers represent a frame in the animation.
+* *Multilayered Drawing*: Users can draw their own images for flipbooks, layer by layer. These layers represent a frame in the animation. Layers can be added with a hand swipe or by clicking the new layer button.
     * *Erasing and undo*: Lines can be erased or removed completely with the eraser tool or undo button. This allows for easy reversable actions.
     * *Color Change*: User's can change the color of the drawing cursor using a color picker, thus allowing colorful animations!
 * *Drawing Playback*: Users can view the progress of their flipbook with the playback button, which shows the animation they have made so far. The animation is updated as layers are added.
