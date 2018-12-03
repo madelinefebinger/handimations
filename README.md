@@ -46,10 +46,10 @@ Explaining the functions
      * gif.js.map
      * gif.worker.js
      * gif.worker.js.map
-
-The exportGif() function in index.html creates a GIF object and uses the following functions from the gif.js library
-gif.addFrame(canvasElement, delay) - adds a new frame with a given delay
-gif.render() - creates the finished gif
+     
+     * exportGif() function in index.html creates a GIF object and uses the following functions from the gif.js library
+     * gif.addFrame(canvasElement, delay) - adds a new frame with a given delay
+     * gif.render() - creates the finished gif
 
 ## Controls
 
